@@ -14,7 +14,7 @@ kerutaシステムは、Keycloakを使用してユーザー認証と認可を管
 docker run -p 8180:8080 -e KEYCLOAK_ADMIN=admin -e KEYCLOAK_ADMIN_PASSWORD=admin quay.io/keycloak/keycloak:latest start-dev
 ```
 
-2. **Keycloak管理コンソールへのアクセス**:
+1. **Keycloak管理コンソールへのアクセス**:
    - URL: http://localhost:8180/admin/
    - 初期認証情報:
      - ユーザー名: admin
