@@ -3,6 +3,7 @@
 本リポジトリは、kerutaプロジェクトの設計・運用・技術情報をまとめたドキュメント集です。
 
 ## サブプロジェクト
+- `keruta`: 
 - `keruta-github`: kerutaをGitHubから操作するためのツール/サービス（`keruta-github/` ディレクトリに配置）
 
 ## kerutaドキュメント一覧
