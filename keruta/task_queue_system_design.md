@@ -25,10 +25,10 @@
 └────────┘ │ └─────────────┘ │  (Kotlin)   │ │
            │                 └─────────────┘ │
            │                        │        │
-           │ ┌─────────────┐ ┌─────────────┐ │
-           │ │    Redis    │ │   MongoDB   │ │
-           │ │   (Queue)   │ │ (Database)  │ │
-           │ └─────────────┘ └─────────────┘ │
+           │                 ┌─────────────┐ │
+           │                 │   MongoDB   │ │
+           │                 │ (Database)  │ │
+           │                 └─────────────┘ │
            │                        │        │
            │ ┌─────────────┐ ┌─────────────┐ │
            │ │   Agent     │ │   Worker    │ │
@@ -47,7 +47,7 @@
 #### 2.2.2 Worker Service (Kotlin)
 - タスク処理ワーカー
 - 基本的なエージェント実行機能
-- Redis キューからのタスク取得
+- MongoDBからのタスク取得・状態更新
 
 ## 3. データモデル（簡略版）
 
@@ -143,10 +143,8 @@ Response:
 ```kotlin
 @Service
 class TaskService(
-    private val taskRepository: TaskRepository,
-    private val redisTemplate: RedisTemplate<String, Any>
+    private val taskRepository: TaskRepository
 ) {
-
     fun createTask(request: CreateTaskRequest): Task {
         val task = Task(
             title = request.title,
@@ -154,28 +152,24 @@ class TaskService(
             priority = request.priority,
             language = request.language
         )
-
-        val savedTask = taskRepository.save(task)
-
-        // Redisキューに追加
-        redisTemplate.opsForList().leftPush("task_queue", savedTask.id)
-
-        return savedTask
+        return taskRepository.save(task)
     }
 
     fun getTasksByStatus(status: TaskStatus): List<Task> {
         return taskRepository.findByStatusOrderByCreatedAtDesc(status)
     }
 
+    fun getNextQueuedTask(): Task? {
+        return taskRepository.findFirstByStatusOrderByPriorityDescCreatedAtAsc(TaskStatus.QUEUED)
+    }
+
     fun updateTaskStatus(taskId: String, status: TaskStatus): Task {
         val task = taskRepository.findById(taskId)
             .orElseThrow { TaskNotFoundException(taskId) }
-
         val updatedTask = task.copy(
             status = status,
             updatedAt = LocalDateTime.now()
         )
-
         return taskRepository.save(updatedTask)
     }
 }
@@ -186,25 +180,18 @@ class TaskService(
 @Component
 class TaskWorker(
     private val taskService: TaskService,
-    private val codingAgentService: CodingAgentService,
-    private val redisTemplate: RedisTemplate<String, Any>
+    private val codingAgentService: CodingAgentService
 ) {
-
     @Scheduled(fixedDelay = 5000) // 5秒間隔
     fun processNextTask() {
-        val taskId = redisTemplate.opsForList()
-            .rightPop("task_queue") as String? ?: return
-
+        val task = taskService.getNextQueuedTask() ?: return
         try {
-            val task = taskService.getTaskById(taskId)
-            taskService.updateTaskStatus(taskId, TaskStatus.PROCESSING)
-
+            taskService.updateTaskStatus(task.id, TaskStatus.PROCESSING)
             val result = codingAgentService.executeTask(task)
-
-            taskService.completeTask(taskId, result)
+            taskService.completeTask(task.id, result)
         } catch (e: Exception) {
-            taskService.updateTaskStatus(taskId, TaskStatus.FAILED)
-            logger.error("Task processing failed: $taskId", e)
+            taskService.updateTaskStatus(task.id, TaskStatus.FAILED)
+            // ... 修正タスク自動追加処理 ...
         }
     }
 }
@@ -400,10 +387,6 @@ spring:
       password: password
       authentication-database: admin
 
-  redis:
-    host: redis
-    port: 6379
-
 server:
   port: 8080
 
@@ -417,7 +400,6 @@ logging:
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
-    implementation("org.springframework.boot:spring-boot-starter-data-redis")
     implementation ("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
     implementation("org.mongodb:mongodb-driver-sync")
@@ -483,7 +465,7 @@ kubectl logs -f deployment/task-api
 
 **技術スタック**
 - Kotlin + Spring Boot
-- MongoDB + Redis
+- MongoDB
 - Kubernetes（基本機能のみ）
 - Docker
 
@@ -493,3 +475,54 @@ kubectl logs -f deployment/task-api
 - 1日のタスク処理数：100-500個
 
 必要に応じて機能拡張や性能向上を段階的に実装できる設計となっています。
+
+## 11. エラー発生時の自動修正タスク追加仕様
+
+### 11.1 概要
+タスク実行時にエラーが発生した場合、システムは自動的に「修正タスク」を生成し、タスクキューに追加します。これにより、エラー発生時の修正対応を自動化し、タスクの継続的な改善を促進します。
+
+### 11.2 仕様詳細
+- タスクワーカーがタスク実行中に例外やエラーを検知した場合、元タスクの内容とエラー内容を元に新たな修正タスクを作成します。
+- 修正タスクの`title`は「【自動修正】元タスクタイトル」とし、`description`には元タスクの説明とエラー内容を追記します。
+- 修正タスクの`priority`や`language`は元タスクを引き継ぎます。
+- 修正タスクは通常のタスクと同様にキューに追加され、次回以降のワーカー処理で実行されます。
+- **無限ループ防止のため、同一タスクから自動生成される修正タスクの回数には上限（例：3回）を設けます。上限に達した場合は修正タスクを追加しません。修正タスクには元タスクIDと自動生成回数をメタ情報として保持します。**
+
+### 11.3 フロー図
+```
+[タスク実行] → [成功] → [COMPLETED]
+                ↓
+              [失敗]
+                ↓
+      [FAILEDに更新] → [修正タスク自動生成（上限未満なら）] → [キューに追加]
+                ↓
+      [上限到達時は修正タスク追加せず終了]
+```
+
+### 11.4 実装例（Kotlin擬似コード）
+```kotlin
+catch (e: Exception) {
+    taskService.updateTaskStatus(taskId, TaskStatus.FAILED)
+    logger.error("Task processing failed: $taskId", e)
+
+    val originalTask = taskService.getTaskById(taskId)
+    val fixCount = originalTask.fixCount ?: 0
+    val maxFixCount = 3
+    if (fixCount < maxFixCount) {
+        val fixTaskRequest = CreateTaskRequest(
+            title = "【自動修正】${originalTask.title}",
+            description = "${originalTask.description}\n---\nエラー内容: ${e.message}",
+            priority = originalTask.priority,
+            language = originalTask.language,
+            parentTaskId = originalTask.id,
+            fixCount = fixCount + 1
+        )
+        taskService.createTask(fixTaskRequest)
+    } else {
+        logger.warn("修正タスク自動生成の上限に到達: $taskId")
+    }
+}
+```
+
+### 11.5 備考
+- 修正タスクには元タスクIDやエラー発生時刻などのメタ情報を付与することで、追跡性を高めることができます。
