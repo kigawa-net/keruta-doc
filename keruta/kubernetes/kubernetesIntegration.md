@@ -85,3 +85,4 @@ spec:
 - [kubernetesInitContainer.md](./kubernetesInitContainer.md)
 - [kubernetesPVC.md](./kubernetesPVC.md)
 - [kubernetesLogCollection.md](./kubernetesLogCollection.md)
+- [kubernetesCleanupJob.md](./kubernetesCleanupJob.md)
