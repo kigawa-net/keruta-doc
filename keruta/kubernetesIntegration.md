@@ -51,6 +51,11 @@ keruta.kubernetes.default-namespace=default
 2. **機密情報**: 機密情報を含むタスクを処理する場合は、Kubernetes Secretsの使用を検討してください。
 3. **ネットワークポリシー**: 作成されたJobに紐づくPodに適切なネットワークポリシーを適用してください。
 
+## 制限事項
+
+1. 現在のバージョンでは、一度に1つのJobのみ作成できます。
+2. 長いタスク説明は環境変数の制限により切り詰められる可能性があります。
+
 ## トラブルシューティング
 
 1. **ポッド作成失敗**: Kubernetesクラスターへの接続設定と権限を確認してください。
@@ -148,8 +153,6 @@ keruta.kubernetes.default-namespace=default
 
 ### 概要
 タスク実行前に、init containerを利用して指定リポジトリをPod内にクローンできます。これにより、タスク本体のコンテナは事前に用意されたソースコードやリソースを利用して処理を開始できます。
-
-> **詳細情報**: より詳細な情報は [Git Clone in Init Container](gitCloneInitContainer.md) ドキュメントを参照してください。
 
 ### 仕様
 - init containerで`git clone`コマンドを実行し、リポジトリを永続ボリューム（emptyDir等）にクローンします。
