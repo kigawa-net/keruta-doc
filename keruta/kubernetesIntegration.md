@@ -143,3 +143,98 @@ keruta.kubernetes.default-namespace=default
 ### エラー通知
 - ERRORレベルのログ発生時に管理者へ通知可能
 - 通知方法は設定可能（Email, Slack等）
+
+## init containerによるリポジトリクローン
+
+### 概要
+タスク実行前に、init containerを利用して指定リポジトリをPod内にクローンできます。これにより、タスク本体のコンテナは事前に用意されたソースコードやリソースを利用して処理を開始できます。
+
+### 仕様
+- init containerで`git clone`コマンドを実行し、リポジトリを永続ボリューム（emptyDir等）にクローンします。
+- メインコンテナ（タスク実行用）は同じボリュームをマウントし、クローン済みリポジトリにアクセスできます。
+- クローン先パスやリポジトリURLはタスク情報や設定から動的に指定可能です。
+- 認証が必要な場合は、Kubernetes Secret等で認証情報を渡します。
+
+### サンプル構成
+```yaml
+apiVersion: batch/v1
+kind: Job
+spec:
+  template:
+    spec:
+      volumes:
+        - name: repo-volume
+          emptyDir: {}
+      initContainers:
+        - name: git-clone
+          image: alpine/git
+          command: ["git", "clone", "<REPO_URL>", "/repo"]
+          volumeMounts:
+            - name: repo-volume
+              mountPath: /repo
+      containers:
+        - name: main
+          image: <TASK_IMAGE>
+          volumeMounts:
+            - name: repo-volume
+              mountPath: /repo
+          # ...他の設定...
+```
+
+### 注意事項
+- init containerが失敗した場合、メインコンテナは起動しません。
+- プライベートリポジトリの場合、SSHキーやアクセストークンをSecretで管理してください。
+
+## PVCによるgitリポジトリの永続化
+
+### 概要
+init containerでクローンしたgitリポジトリを、emptyDirではなくPersistentVolumeClaim（PVC）を利用して永続化することができます。これにより、Podの再起動や複数Pod間でリポジトリデータを共有したい場合に有効です。
+
+### 仕様
+- 事前にPersistentVolumeClaim（PVC）を作成しておきます。
+- init containerでgit cloneを実行し、クローン先をPVCでマウントしたディレクトリに指定します。
+- メインコンテナも同じPVCをマウントし、クローン済みリポジトリにアクセスします。
+- PVCのストレージクラスやアクセスモード（ReadWriteOnce/ReadWriteMany）は運用要件に応じて選択してください。
+
+### サンプル構成
+```yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: git-repo-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: batch/v1
+kind: Job
+spec:
+  template:
+    spec:
+      volumes:
+        - name: git-repo
+          persistentVolumeClaim:
+            claimName: git-repo-pvc
+      initContainers:
+        - name: git-clone
+          image: alpine/git
+          command: ["git", "clone", "<REPO_URL>", "/git-repo"]
+          volumeMounts:
+            - name: git-repo
+              mountPath: /git-repo
+      containers:
+        - name: main
+          image: <TASK_IMAGE>
+          volumeMounts:
+            - name: git-repo
+              mountPath: /git-repo
+          # ...他の設定...
+```
+
+### 注意事項
+- PVCはPod削除後もデータが保持されます。リポジトリの更新や削除運用に注意してください。
+- 複数Podから同時に書き込みが発生しないよう、アクセスモードを適切に設定してください。
+- プライベートリポジトリの場合、認証情報の管理はSecret等を利用してください。
