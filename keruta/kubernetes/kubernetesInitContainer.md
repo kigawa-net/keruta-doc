@@ -16,6 +16,7 @@
 - init containerで`git clone`コマンドを実行し、リポジトリを永続ボリューム（emptyDir等）にクローンします。
 - メインコンテナ（タスク実行用）は同じボリュームをマウントし、クローン済みリポジトリにアクセスできます。
 - クローン先パスやリポジトリURLはタスク情報や設定から動的に指定可能です。
+- クローン後、特定のパスをGitの管理対象から除外するために`.git/info/exclude`ファイルに設定を追記できます。
 - 認証が必要な場合は、Kubernetes Secret等で認証情報を渡します。
 
 ## サンプル
@@ -31,7 +32,12 @@ spec:
       initContainers:
         - name: git-clone
           image: alpine/git
-          command: ["git", "clone", "<REPO_URL>", "/repo"]
+          command:
+            - /bin/sh
+            - -c
+            - |
+              git clone <REPO_URL> /repo
+              echo '/.keruta' >> /repo/.git/info/exclude
           volumeMounts:
             - name: repo-volume
               mountPath: /repo
@@ -49,6 +55,7 @@ spec:
 - プライベートリポジトリの場合、SSHキーやアクセストークンをSecretで管理してください。
 
 ## 関連リンク
+- [ローカル環境での除外設定](../gitExcludeSpec.md)
 - [kubernetesIntegration.md](./kubernetesIntegration.md)
 - [kubernetesJobSpec.md](./kubernetesJobSpec.md)
 - [kubernetesPVC.md](./kubernetesPVC.md) 
