@@ -42,4 +42,17 @@ data class Agent(
 )
 
 enum class AgentStatus { AVAILABLE, BUSY, OFFLINE }
+```
+
+## リポジトリモデル
+```kotlin
+@Entity
+data class Repository(
+    @Id val id: String = UUID.randomUUID().toString(),
+    val name: String,
+    val url: String, // e.g., https://github.com/user/repo.git
+    val installScript: String? = null, // インストールスクリプト
+    val createdAt: LocalDateTime = LocalDateTime.now(),
+    val updatedAt: LocalDateTime = LocalDateTime.now()
+)
 ``` 

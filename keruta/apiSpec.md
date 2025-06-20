@@ -48,4 +48,32 @@ Response:
     "files": ["LoginController.kt", "User.kt"]
   }
 }
+```
+
+## リポジトリ管理API
+
+### リポジトリ情報更新
+リポジトリ名やインストールスクリプトなどを更新します。
+
+```http
+PATCH /api/repositories/{repoId}
+Content-Type: application/json
+
+{
+  "name": "keruta-app",
+  "installScript": "#!/bin/bash\\n\\npip install -r requirements.txt"
+}
+```
+
+### インストールスクリプト実行
+登録されたインストールスクリプトを実行します。
+
+```http
+POST /api/repositories/{repoId}/install
+
+Response:
+{
+  "status": "QUEUED",
+  "executionId": "exec-abc-123"
+}
 ``` 
