@@ -1,5 +1,7 @@
 # PVCによるgitリポジトリの永続化
 
+> **概要**: init containerでクローンしたgitリポジトリをPVCで永続化・共有する方法や、Kotlinによるマニフェスト自動生成例をまとめたドキュメントです。
+
 ## 概要
 init containerでクローンしたgitリポジトリを、emptyDirではなくPersistentVolumeClaim（PVC）を利用して永続化することができます。これにより、Podの再起動や複数Pod間でリポジトリデータを共有したい場合に有効です。
 
