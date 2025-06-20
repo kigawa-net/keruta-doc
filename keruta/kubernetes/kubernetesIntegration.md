@@ -30,6 +30,10 @@ kerutaシステムは、タスク情報を環境変数としてKubernetes Jobリ
 | createdAt   | KERUTA_TASK_CREATED_AT  | タスク作成日時      |
 | updatedAt   | KERUTA_TASK_UPDATED_AT  | タスク最終更新日時   |
 
+### 成果物収集機能
+- Jobが正常に完了した際に、Pod内の`/.keruta/doc`ディレクトリ配下のファイルをkerutaシステムに保存します。
+- Job終了後、クリーンアップ用のJobが実行され、keruta-apiを利用してドキュメントを更新します。
+
 ## セットアップ
 Kubernetes統合の設定はデータベースに保存され、初回起動時は`application.properties`のデフォルト値が使用されます。
 
@@ -53,18 +57,22 @@ spec:
       containers:
         - name: main
           image: <TASK_IMAGE>
+          # 例: 処理を実行し、/.keruta/doc ディレクトリに成果物を作成
+          command: ["/bin/sh", "-c", "mkdir -p /.keruta/doc && echo 'Job completed successfully.' > /.keruta/doc/README.md"]
           env:
             - name: KERUTA_TASK_ID
               value: "123"
             # ...他の環境変数...
       restartPolicy: Never
 ```
-
 ## 注意点
 - kerutaサービスアカウントにはJob作成のためのRBAC権限が必要
 - 機密情報はKubernetes Secretsで管理
 - 適切なネットワークポリシーを適用
 - 長い説明は環境変数の制限で切り詰められる場合あり
+- 成果物収集機能を利用する場合、kerutaサービスアカウントにはPodに対する`exec`権限が必要です。
+- Podが正常終了後すぐに削除される設定（例：`ttlSecondsAfterFinished`が短い）の場合、ファイル収集に失敗することがあります。
+- 収集対象のファイルサイズには上限が設定されている場合があります。
 
 ## FAQ・トラブルシューティング
 - **ポッド作成失敗**: クラスターへの接続設定と権限を確認
