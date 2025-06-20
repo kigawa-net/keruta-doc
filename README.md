@@ -5,6 +5,7 @@
 ## サブプロジェクト
 - `keruta`: 
 - `keruta-github`: kerutaをGitHubから操作するためのツール/サービス（`keruta-github/` ディレクトリに配置）
+- `keruta-container`: kerutaのタスクを実行するためのコンテナイメージ（`keruta-container/` ディレクトリに配置）
 
 ## kerutaドキュメント一覧
 
