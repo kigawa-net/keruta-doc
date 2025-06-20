@@ -149,6 +149,8 @@ keruta.kubernetes.default-namespace=default
 ### 概要
 タスク実行前に、init containerを利用して指定リポジトリをPod内にクローンできます。これにより、タスク本体のコンテナは事前に用意されたソースコードやリソースを利用して処理を開始できます。
 
+> **詳細情報**: より詳細な情報は [Git Clone in Init Container](gitCloneInitContainer.md) ドキュメントを参照してください。
+
 ### 仕様
 - init containerで`git clone`コマンドを実行し、リポジトリを永続ボリューム（emptyDir等）にクローンします。
 - メインコンテナ（タスク実行用）は同じボリュームをマウントし、クローン済みリポジトリにアクセスできます。
