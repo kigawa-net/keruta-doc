@@ -29,6 +29,24 @@ kind: Job
 spec:
   template:
     spec:
+      initContainers:
+        - name: prepare-docs
+          image: curlimages/curl
+          command:
+            - "sh"
+            - "-c"
+            - |
+              mkdir -p /work/.keruta
+              # KERUTA_DOCUMENT_IDとKERUTA_API_ENDPOINTは環境変数から取得することを想定
+              DOC_ID=${KERUTA_DOCUMENT_ID:-"default-readme"}
+              API_ENDPOINT=${KERUTA_API_ENDPOINT:-"http://keruta-api.keruta.svc.cluster.local"}
+              
+              # APIからドキュメントを取得してファイルに保存
+              # -s: サイレントモード, -f: エラー時にサイレントに失敗, -L: リダイレクトを追跡
+              curl -sfL -o /work/.keruta/README.md "${API_ENDPOINT}/api/v1/documents/${DOC_ID}/content"
+          volumeMounts:
+            - name: workdir
+              mountPath: /work
       containers:
         - name: main
           image: <TASK_IMAGE>
