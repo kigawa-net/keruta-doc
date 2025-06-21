@@ -24,6 +24,8 @@
 
 - [README.md](keruta-agent/README.md)
   - keruta-agentの概要、機能仕様、コマンド仕様、使用方法などの詳細。
+- [commandReference.md](keruta-agent/commandReference.md)
+  - keruta-agentで利用可能なすべてのコマンドとその使用方法をまとめたリファレンス。
 - [apiSpec.md](keruta-agent/apiSpec.md)
   - keruta-agentがkeruta APIサーバーと通信する際のAPI仕様。
 - [implementation.md](keruta-agent/implementation.md)

@@ -140,38 +140,7 @@ curl -X POST http://keruta-api:8080/api/v1/auth/login \
 }
 ```
 
-### 4. 成果物アップロード
-
-#### POST /tasks/{id}/artifacts
-タスクの成果物をアップロードします。
-
-**パラメータ:**
-- `id` (path): タスクID
-
-**リクエストボディ (multipart/form-data):**
-```
-file: <binary_data>
-name: "report.pdf"
-description: "月次レポート"
-type: "application/pdf"
-size: 1024000
-```
-
-**レスポンス:**
-```json
-{
-  "id": "artifact-id",
-  "taskId": "task-id",
-  "name": "report.pdf",
-  "description": "月次レポート",
-  "type": "application/pdf",
-  "size": 1024000,
-  "url": "/api/v1/artifacts/artifact-id/download",
-  "uploadedAt": "2024-01-01T11:00:00Z"
-}
-```
-
-### 5. メトリクス送信
+### 4. メトリクス送信
 
 #### POST /tasks/{id}/metrics
 タスクの実行メトリクスを送信します。
@@ -203,7 +172,7 @@ size: 1024000
 }
 ```
 
-### 6. エラー報告
+### 5. エラー報告
 
 #### POST /tasks/{id}/errors
 タスク実行中のエラーを報告します。
@@ -235,7 +204,7 @@ size: 1024000
 }
 ```
 
-### 7. 自動修正タスク作成
+### 6. 自動修正タスク作成
 
 #### POST /tasks/{id}/auto-fix
 エラー発生時に自動修正タスクを作成します。
@@ -266,7 +235,7 @@ size: 1024000
 }
 ```
 
-### 8. ヘルスチェック
+### 7. ヘルスチェック
 
 #### GET /health
 keruta APIサーバーのヘルスチェックを行います。
@@ -332,7 +301,6 @@ keruta APIサーバーのヘルスチェックを行います。
 | `TASK_NOT_FOUND` | タスクが見つかりません | 404 |
 | `TASK_ALREADY_COMPLETED` | タスクは既に完了しています | 409 |
 | `INVALID_STATUS_TRANSITION` | 無効なステータス遷移です | 422 |
-| `FILE_TOO_LARGE` | ファイルサイズが制限を超えています | 413 |
 | `UNAUTHORIZED` | 認証が必要です | 401 |
 | `FORBIDDEN` | アクセス権限がありません | 403 |
 | `RATE_LIMIT_EXCEEDED` | レート制限を超えました | 429 |
@@ -341,7 +309,6 @@ keruta APIサーバーのヘルスチェックを行います。
 keruta-agentのAPI呼び出しには以下のレート制限が適用されます：
 
 - **リクエスト制限**: 100リクエスト/分
-- **ファイルアップロード**: 10ファイル/分
 - **ログ送信**: 1000ログ/分
 
 レート制限を超えた場合、`429 Too Many Requests`ステータスが返されます。

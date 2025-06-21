@@ -32,7 +32,6 @@ keruta-agent/
 │   │   ├── fail.go                 # failコマンド
 │   │   ├── progress.go             # progressコマンド
 │   │   ├── log.go                  # logコマンド
-│   │   ├── artifact.go             # artifactコマンド
 │   │   ├── health.go               # healthコマンド
 │   │   └── config.go               # configコマンド
 │   ├── config/
@@ -43,8 +42,6 @@ keruta-agent/
 │       ├── file.go                 # ファイル操作
 │       └── metrics.go              # メトリクス収集
 ├── pkg/
-│   ├── artifacts/
-│   │   └── manager.go              # 成果物管理
 │   ├── health/
 │   │   └── checker.go              # ヘルスチェック
 │   └── metrics/
@@ -57,8 +54,7 @@ keruta-agent/
 │   └── unit/                       # 単体テスト
 ├── examples/
 │   ├── basic-task.sh               # 基本的なタスク例
-│   ├── error-handling.sh           # エラーハンドリング例
-│   └── artifact-upload.sh          # 成果物アップロード例
+│   └── error-handling.sh           # エラーハンドリング例
 ├── Dockerfile                      # Dockerイメージ定義
 ├── go.mod                          # Goモジュール定義
 ├── go.sum                          # 依存関係チェックサム
@@ -124,11 +120,6 @@ func (c *Client) SendLog(taskID, level, message string) error {
     return c.makeRequest("POST", fmt.Sprintf("/tasks/%s/logs", taskID), data)
 }
 
-func (c *Client) UploadArtifact(taskID, filePath, description string) error {
-    // multipart/form-dataでのファイルアップロード実装
-    return nil
-}
-
 func (c *Client) makeRequest(method, path string, data interface{}) error {
     jsonData, err := json.Marshal(data)
     if err != nil {
@@ -181,11 +172,6 @@ type Config struct {
         Format string `mapstructure:"format"`
     } `mapstructure:"logging"`
     
-    Artifacts struct {
-        MaxSize    int64  `mapstructure:"max_size"`
-        Directory  string `mapstructure:"directory"`
-    } `mapstructure:"artifacts"`
-    
     ErrorHandling struct {
         AutoFix    bool `mapstructure:"auto_fix"`
         RetryCount int  `mapstructure:"retry_count"`
@@ -219,8 +205,6 @@ func setDefaults() {
     viper.SetDefault("api.timeout", "30s")
     viper.SetDefault("logging.level", "INFO")
     viper.SetDefault("logging.format", "json")
-    viper.SetDefault("artifacts.max_size", 100*1024*1024) // 100MB
-    viper.SetDefault("artifacts.directory", "/.keruta/doc")
     viper.SetDefault("error_handling.auto_fix", true)
     viper.SetDefault("error_handling.retry_count", 3)
 }
@@ -336,7 +320,7 @@ func NewRootCommand(cfg *config.Config) *cobra.Command {
         Use:   "keruta",
         Short: "keruta-agent - Kubernetes Pod内でタスクを実行するためのCLIツール",
         Long: `keruta-agentは、kerutaシステムによってKubernetes Jobとして実行されるPod内で動作するCLIツールです。
-タスクの実行状況をkeruta APIサーバーに報告し、成果物の保存、ログの収集、エラーハンドリングなどの機能を提供します。`,
+タスクの実行状況をkeruta APIサーバーに報告し、ログの収集、エラーハンドリングなどの機能を提供します。`,
         Version: "1.0.0",
     }
     
@@ -347,7 +331,6 @@ func NewRootCommand(cfg *config.Config) *cobra.Command {
         NewFailCommand(cfg),
         NewProgressCommand(cfg),
         NewLogCommand(cfg),
-        NewArtifactCommand(cfg),
         NewHealthCommand(cfg),
         NewConfigCommand(cfg),
     )
@@ -445,14 +428,8 @@ sleep 5
 echo "4. 進捗を更新します..."
 keruta progress 75 --message "データの処理中..."
 
-# 成果物の作成
-echo "5. 成果物を作成します..."
-mkdir -p /.keruta/doc
-echo "処理結果: データ処理が正常に完了しました" > /.keruta/doc/result.txt
-echo "処理時間: 5秒" >> /.keruta/doc/result.txt
-
 # タスク成功
-echo "6. タスクを完了します..."
+echo "5. タスクを完了します..."
 keruta success --message "データ処理が完了しました"
 
 echo "=== タスク実行完了 ==="
@@ -489,40 +466,6 @@ keruta log INFO "処理が完了しました"
 keruta success --message "処理が正常に完了しました"
 
 echo "=== エラーハンドリング例完了 ==="
-```
-
-### 3. 成果物アップロード例 (`examples/artifact-upload.sh`)
-```bash
-#!/bin/bash
-set -e
-
-# 環境変数設定
-export KERUTA_TASK_ID="123e4567-e89b-12d3-a456-426614174000"
-export KERUTA_API_URL="http://keruta-api:8080"
-export KERUTA_API_TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-
-echo "=== 成果物アップロード例 ==="
-
-# タスク開始
-keruta start
-
-# 成果物ディレクトリ作成
-mkdir -p /.keruta/doc
-
-# 成果物作成
-echo "月次レポート" > /.keruta/doc/report.txt
-echo "生成日時: $(date)" >> /.keruta/doc/report.txt
-
-# 手動で成果物を追加
-keruta artifact add /.keruta/doc/report.txt --description "月次レポート"
-
-# 成果物一覧表示
-keruta artifact list
-
-# タスク完了
-keruta success --message "成果物の作成とアップロードが完了しました"
-
-echo "=== 成果物アップロード例完了 ==="
 ```
 
 ## テスト
@@ -740,10 +683,6 @@ spec:
           # 実際の処理
           echo "タスク処理を実行中..."
           sleep 10
-          
-          # 成果物作成
-          mkdir -p /.keruta/doc
-          echo "処理完了" > /.keruta/doc/result.txt
           
           # タスク完了
           keruta success --message "タスクが正常に完了しました"

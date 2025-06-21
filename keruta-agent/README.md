@@ -15,11 +15,10 @@
 - [関連リンク](#関連リンク)
 
 ## 概要
-`keruta-agent`は、kerutaシステムによってKubernetes Jobとして実行されるPod内で動作するCLIツールです。タスクの実行状況をkeruta APIサーバーに報告し、成果物の保存、ログの収集、エラーハンドリングなどの機能を提供します。
+`keruta-agent`は、kerutaシステムによってKubernetes Jobとして実行されるPod内で動作するCLIツールです。タスクの実行状況をkeruta APIサーバーに報告し、ログの収集、エラーハンドリングなどの機能を提供します。
 
 ### 主な機能
 - タスクステータスの更新（PROCESSING → COMPLETED/FAILED）
-- 成果物の保存（`/.keruta/doc`ディレクトリ配下のファイル）
 - 実行ログの収集と送信
 - エラー発生時の自動修正タスク作成
 - タスク実行時間の計測
@@ -34,9 +33,9 @@
 │  │   User Script   │    │      keruta-agent          │ │
 │  │                 │    │                             │ │
 │  │ #!/bin/bash     │───▶│  • タスクステータス更新     │ │
-│  │ keruta start    │    │  • 成果物保存               │ │
-│  │ # 処理実行      │    │  • ログ収集                 │ │
-│  │ keruta success  │    │  • エラーハンドリング       │ │
+│  │ keruta start    │    │  • ログ収集                 │ │
+│  │ # 処理実行      │    │  • エラーハンドリング       │ │
+│  │ keruta success  │    │                             │ │
 │  └─────────────────┘    └─────────────────────────────┘ │
 │                                                         │
 └─────────────────────────────────────────────────────────┘
@@ -47,7 +46,6 @@
                     │   (Spring Boot)         │
                     │                         │
                     │  • タスク状態更新       │
-                    │  • ドキュメント保存     │
                     │  • ログ保存             │
                     └─────────────────────────┘
 ```
@@ -60,25 +58,19 @@
 - **失敗**: `keruta fail` - タスクをFAILED状態に更新
 - **進捗**: `keruta progress <percentage>` - 進捗率を更新
 
-### 2. 成果物管理
-- `/.keruta/doc`ディレクトリ配下のファイルを自動収集
-- ファイルサイズ制限: 100MB（設定可能）
-- サポート形式: テキスト、画像、PDF、ZIP等
-- メタデータ付きでkeruta APIに送信
-
-### 3. ログ管理
+### 2. ログ管理
 - 標準出力・標準エラー出力の自動キャプチャ
 - 構造化ログ（JSON形式）のサポート
 - ログレベル制御（DEBUG, INFO, WARN, ERROR）
 - ログローテーション機能
 
-### 4. エラーハンドリング
+### 3. エラーハンドリング
 - 予期しないエラー発生時の自動検出
 - エラー詳細の自動収集
 - 自動修正タスクの作成（設定可能）
 - リトライ機能（設定可能）
 
-### 5. 監視・メトリクス
+### 4. 監視・メトリクス
 - 実行時間の計測
 - リソース使用量の監視
 - ヘルスチェック機能
@@ -116,7 +108,6 @@ keruta success [options]
 
 **オプション:**
 - `--message <message>`: 成功メッセージ
-- `--artifacts-dir <path>`: 成果物ディレクトリ（デフォルト: `/.keruta/doc`）
 
 **例:**
 ```bash
@@ -175,20 +166,6 @@ keruta log <level> <message> [options]
 keruta log INFO "データベースクエリを実行中..."
 ```
 
-#### `keruta artifact`
-成果物を手動で追加します。
-
-```bash
-keruta artifact add <file> [options]
-keruta artifact list
-keruta artifact remove <file>
-```
-
-**例:**
-```bash
-keruta artifact add ./output/report.pdf --description "月次レポート"
-```
-
 #### `keruta health`
 ヘルスチェックを実行します。
 
@@ -222,8 +199,6 @@ keruta config set <key> <value>
 | 変数名 | 説明 | デフォルト値 |
 |--------|------|-------------|
 | `KERUTA_LOG_LEVEL` | ログレベル | `INFO` |
-| `KERUTA_ARTIFACTS_DIR` | 成果物ディレクトリ | `/.keruta/doc` |
-| `KERUTA_MAX_FILE_SIZE` | 最大ファイルサイズ（MB） | `100` |
 | `KERUTA_AUTO_FIX_ENABLED` | 自動修正タスク作成 | `true` |
 | `KERUTA_RETRY_COUNT` | リトライ回数 | `3` |
 | `KERUTA_TIMEOUT` | API呼び出しタイムアウト（秒） | `30` |
@@ -263,9 +238,6 @@ api:
 logging:
   level: INFO
   format: json
-artifacts:
-  max_size: 100MB
-  directory: /.keruta/doc
 error_handling:
   auto_fix: true
   retry_count: 3
@@ -290,10 +262,6 @@ python process_data.py
 
 # 進捗報告
 keruta progress 75 --message "データの処理中..."
-
-# 成果物の作成
-mkdir -p /.keruta/doc
-echo "処理結果" > /.keruta/doc/result.txt
 
 # タスク成功
 keruta success --message "データ処理が完了しました"
@@ -350,7 +318,6 @@ keruta-agent/
 │   ├── logger/                # ログ機能
 │   └── utils/                 # ユーティリティ関数
 ├── pkg/
-│   ├── artifacts/             # 成果物管理
 │   ├── health/                # ヘルスチェック
 │   └── metrics/               # メトリクス収集
 ├── scripts/                   # ビルド・デプロイスクリプト
