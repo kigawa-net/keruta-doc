@@ -7,6 +7,8 @@
   kerutaシステム全体の詳細・API仕様・セットアップ方法などを記載。
 - [adminPanel.md](./adminPanel.md)  
   管理パネルの機能・画面・操作方法・権限管理について解説。
+- [adminPanelScriptGenerator.md](./adminPanelScriptGenerator.md)  
+  管理パネルからインストールスクリプトを視覚的に作成・編集できる機能の詳細。
 
 ## 2. 認証・認可
 - [auth/keycloakIntegration.md](./auth/keycloakIntegration.md)  
@@ -27,6 +29,10 @@
 ## 4. システム設計・タスクキュー
 - [taskQueueSystemDesign.md](./taskQueueSystemDesign.md)  
   コーディングエージェントタスクキューシステムの設計思想、API、Kotlin実装例。
+
+## 5. セットアップ・スクリプト
+- [setupScript.md](./setupScript.md)  
+  リポジトリクローン後の自動実行スクリプト機能の仕様と使用方法。
 
 ---
 
