@@ -21,6 +21,7 @@ kerutaシステムで利用するKubernetes Job/Podの設計ポイントをま�
 - ServiceAccountやRBAC、Secretsで最小権限実行
 - Podの標準出力・標準エラーはKubernetesログとして取得
 - Jobの終了コードや状態でタスクの成否を判定
+- **initコンテナ**: タスク実行前の準備処理（リポジトリのクローン、ファイルのダウンロード等）は、initコンテナ内でエージェントが実行します。
 
 ## サンプル
 ```yaml
@@ -33,15 +34,15 @@ spec:
       # リポジトリのクローンや複数ステップに渡る準備処理の詳細は、
       # [Init Containerによる事前準備](./kubernetesInitContainer.md) を参照してください。
       initContainers:
-        - name: setup-environment
-          image: busybox # or curlimages/curl, alpine/git etc.
+        - name: keruta-agent-init
+          image: <AGENT_IMAGE> # keruta-agentイメージ
           command:
             - "sh"
             - "-c"
             - |
               mkdir -p /work/.keruta
-              # ここでリポジトリのクローン、インストールスクリプトの実行、
-              # APIからのファイル取得など、様々な準備処理を記述できます。
+              # エージェントがリポジトリのクローン、インストールスクリプトの実行、
+              # APIからのファイル取得などの準備処理を行います。
               echo "Setup complete."
           volumeMounts:
             - name: workdir
