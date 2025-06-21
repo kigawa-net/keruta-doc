@@ -14,6 +14,7 @@
 
 ## 仕様
 - **リポジトリのクローン**: `git`コマンドが利用可能なイメージを使い、指定されたリポジトリを共有ボリュームにクローンします。
+- **Gitの除外設定**: クローン後に`.git/info/exclude`ファイルに`.keruta`ディレクトリを追加し、Gitの管理対象から除外します。
 - **セットアップスクリプトの実行**: クローンしたリポジトリに含まれるセットアップスクリプト（例: `.keruta/install.sh`）を実行し、依存関係のインストールや環境設定を行います。
 - **ファイルダウンロード**: `curl`などのツールを使い、APIエンドポイントからドキュメントや設定ファイルを取得し、共有ボリュームに配置します。
 - **共有ボリューム**: `initContainers`とメインコンテナ間でファイルを共有するために、`emptyDir`などのボリュームを利用します。
@@ -37,9 +38,11 @@ spec:
             - /bin/sh
             - -c
             - |
-              git clone <REPO_URL> /work
-              # .kerutaディレクトリをgitの管理外に設定
+              set -e
+              git clone --depth 1 --single-branch <REPO_URL> /work
+              echo 'Setting up git exclusions'
               echo '/.keruta' >> /work/.git/info/exclude
+              echo 'Git exclusions configured'
           volumeMounts:
             - name: work-volume
               mountPath: /work
@@ -73,7 +76,7 @@ spec:
               if [ -n "$KERUTA_REPOSITORY_ID" ]; then
                 echo "Fetching install script for repository: $KERUTA_REPOSITORY_ID"
                 SCRIPT_URL="${KERUTA_API_ENDPOINT}/api/v1/repositories/${KERUTA_REPOSITORY_ID}/script"
-                
+
                 if curl -sfL -o ./.keruta/install.sh "${SCRIPT_URL}" && [ -s ./.keruta/install.sh ]; then
                   echo "Running downloaded setup script..."
                   chmod +x ./.keruta/install.sh
