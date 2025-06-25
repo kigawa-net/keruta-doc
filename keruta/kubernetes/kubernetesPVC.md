@@ -18,6 +18,10 @@ init containerでクローンしたgitリポジトリを、PersistentVolumeClaim
 - init containerでgit cloneを実行し、クローン先をPVCでマウントしたディレクトリに指定
 - メインコンテナも同じPVCをマウントし、クローン済みリポジトリにアクセス
 - 親タスクが存在する場合は親タスクのPVCを子タスクでも利用
+- ストレージクラス（StorageClass）を指定可能
+  - システム全体のデフォルト設定
+  - リポジトリごとの設定
+  - タスクごとの設定（優先度: タスク > リポジトリ > システムデフォルト）
 
 ## サンプル
 ```yaml
@@ -32,6 +36,7 @@ spec:
   resources:
     requests:
       storage: 1Gi
+  storageClassName: standard  # ストレージクラスを指定（省略可）
 ---
 apiVersion: batch/v1
 kind: Job
@@ -79,6 +84,7 @@ spec:
  * @param parentTaskId 親タスクID（存在する場合）
  * @param pvcStorageSize PVCのストレージサイズ（例: "1Gi"）
  * @param pvcAccessMode PVCのアクセスモード（例: "ReadWriteOnce"）
+ * @param pvcStorageClass PVCのストレージクラス（例: "standard"）
  * @return 生成されたYAML文字列
  */
 fun generateJobWithPvcYaml(
@@ -87,7 +93,8 @@ fun generateJobWithPvcYaml(
     image: String,
     parentTaskId: String? = null,
     pvcStorageSize: String = "1Gi",
-    pvcAccessMode: String = "ReadWriteOnce"
+    pvcAccessMode: String = "ReadWriteOnce",
+    pvcStorageClass: String = ""
 ): String {
     val mapper = ObjectMapper(YAMLFactory()).registerKotlinModule()
     val result = StringBuilder()
@@ -112,6 +119,12 @@ fun generateJobWithPvcYaml(
                 .withNewResources()
                     .addToRequests("storage", Quantity(pvcStorageSize))
                 .endResources()
+                .apply {
+                    // ストレージクラスが指定されている場合は設定
+                    if (pvcStorageClass.isNotBlank()) {
+                        withStorageClassName(pvcStorageClass)
+                    }
+                }
             .endSpec()
             .build()
 
@@ -173,6 +186,9 @@ fun generateJobWithPvcYaml(
 - 複数Podから同時書き込みが発生しないようアクセスモードを適切に設定
 - プライベートリポジトリの場合、認証情報はSecret等で管理
 - PVC名はDNS-1123サブドメイン名規約に従う
+- ストレージクラスはKubernetesクラスタに存在するものを指定する必要がある
+  - 存在しないストレージクラスを指定するとPVC作成が失敗する
+  - クラスタのデフォルトストレージクラスを使用する場合は空文字列を指定
 
 ## 関連リンク
 - [kubernetesIntegration.md](./kubernetesIntegration.md)
