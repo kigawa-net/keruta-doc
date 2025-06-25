@@ -1,18 +1,17 @@
 # keruta - システム詳細ドキュメント
 
-> **概要**: kerutaシステム全体の構成、API仕様、セットアップ方法、技術スタックなどの詳細をまとめたドキュメントです。
+> **概要**: kerutaシステム全体の構成、セットアップ、API概要、技術スタック、プロジェクト構造をまとめたドキュメントです。
 
 ## 目次
-- [概要](#概要)
+- [システム概要](#システム概要)
 - [セットアップ](#セットアップ)
-- [機能一覧](#機能一覧)
 - [技術スタック](#技術スタック)
 - [プロジェクト構造](#プロジェクト構造)
-- [APIエンドポイント一覧](#apiエンドポイント一覧)
-- [関連リンク](#関連リンク)
+- [API概要](#api概要)
+- [関連ドキュメント](#関連ドキュメント)
 
-## 概要
-このAPIサーバーは、タスクのキューを管理するRESTfulインターフェースを提供します。作成されたタスクは必ずキューに登録され、優先順位に基づいて処理されます。
+## システム概要
+kerutaは、タスクのキュー管理・自動化・Kubernetes連携を特徴とする軽量なタスク管理システムです。Web UI・REST API・管理パネル・Kubernetes連携・Gitリポジトリ管理などを備えています。
 
 ## セットアップ
 ### 必要条件
@@ -26,7 +25,7 @@ docker-compose up -d
 - 初期認証: admin / password
 
 ### 環境変数例
-```
+```env
 SPRING_DATA_MONGODB_HOST=localhost
 SPRING_DATA_MONGODB_PORT=27017
 SPRING_DATA_MONGODB_DATABASE=keruta
@@ -41,75 +40,34 @@ SPRING_DATA_MONGODB_AUTHENTICATION_DATABASE=admin
 ./gradlew bootRun
 ```
 - アプリ起動: http://localhost:8080
-
-### 管理パネル・API仕様書
 - 管理パネル: http://localhost:8080/admin
 - Swagger UI: http://localhost:8080/swagger-ui.html
 
-## 機能一覧
-- タスクのCRUD・自動キュー登録・優先順位付け・ステータス管理
-- ドキュメント保存・GitリポジトリURL保存
-- JWT認証によるアクセス制御
-- Swagger/OpenAPIによるAPI仕様書自動生成
-- 管理パネル（タスク・ドキュメント・リポジトリ管理）
-- タスク情報を環境変数としてKubernetes Pod作成
-
 ## 技術スタック
-- Kotlin / Spring Boot / MongoDB / Gradle（マルチモジュール）
+- Kotlin / Spring Boot / MongoDB / Gradle（マルチモジュール構成）
 
 ## プロジェクト構造
-```
+```text
 keruta/
 ├── buildSrc/                    # ビルド構成の共通化
-│   └── src/main/kotlin/        # ビルドロジック
-├── core/                       # コアモジュール
-│   ├── domain/                 # ドメインモデル
-│   └── usecase/                # ユースケース実装
-├── infra/                      # インフラストラクチャレイヤー
-│   ├── persistence/            # MongoDB永続化実装
-│   └── security/               # JWT認証実装
-└── api/                        # Gitリポジトリ管理API
+├── core/                        # コアモジュール（ドメイン・ユースケース）
+├── infra/                       # インフラ層（永続化・セキュリティ等）
+├── api/                         # API・管理パネル
+└── ...
 ```
 
-## APIエンドポイント一覧
-### 認証・認可
-```
-POST   /api/v1/auth/login         # ログイン（JWTトークン返却）
-POST   /api/v1/auth/refresh       # JWTトークンリフレッシュ
-```
-### タスク管理
-```
-GET    /api/v1/tasks              # タスク一覧
-POST   /api/v1/tasks              # 新規タスク作成
-GET    /api/v1/tasks/{id}         # タスク取得
-PUT    /api/v1/tasks/{id}         # タスク更新
-DELETE /api/v1/tasks/{id}         # タスク削除
-GET    /api/v1/tasks/queue/next   # キューから次のタスク取得
-PATCH  /api/v1/tasks/{id}/status  # ステータス更新
-PATCH  /api/v1/tasks/{id}/priority # 優先度更新
-POST   /api/v1/tasks/kubernetes/create # タスク情報でKubernetes Pod作成
-```
-### ドキュメント管理
-```
-GET    /api/v1/documents          # ドキュメント一覧
-POST   /api/v1/documents          # 新規作成
-GET    /api/v1/documents/{id}     # 取得
-PUT    /api/v1/documents/{id}     # 更新
-DELETE /api/v1/documents/{id}     # 削除
-GET    /api/v1/documents/search   # 検索
-```
-### Gitリポジトリ管理
-```
-GET    /api/v1/repositories       # 一覧
-POST   /api/v1/repositories       # 新規登録
-GET    /api/v1/repositories/{id}  # 取得
-PUT    /api/v1/repositories/{id}  # 更新
-DELETE /api/v1/repositories/{id}  # 削除
-GET    /api/v1/repositories/{id}/validate # URL有効性確認
-```
+## API概要
+- タスク管理・ドキュメント管理・Gitリポジトリ管理・Kubernetes連携・認証/認可 など
+- 詳細なAPI仕様は [apiSpec.md](./apiSpec.md) を参照
 
-## 関連リンク
-- [adminPanel.md](./adminPanel.md)
-- [auth/keycloakIntegration.md](./auth/keycloakIntegration.md)
-- [kubernetes/kubernetesIntegration.md](./kubernetes/kubernetesIntegration.md)
+## データモデル
+- 主要なデータモデル（Task, Agent, Repository等）は [dataModel.md](./dataModel.md) を参照
+
+## 関連ドキュメント
+- [システム概要・アーキテクチャ](./systemOverview.md)
+- [API仕様詳細](./apiSpec.md)
+- [データモデル定義](./dataModel.md)
+- [Keycloak認証連携](../auth/keycloakIntegration.md)
+- [Kubernetes連携](../kubernetes/kubernetesIntegration.md)
+- [管理パネル](../admin/adminPanel.md)
 
