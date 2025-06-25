@@ -18,12 +18,17 @@ init containerでクローンしたgitリポジトリを、PersistentVolumeClaim
 - init containerでgit cloneを実行し、クローン先をPVCでマウントしたディレクトリに指定
 - メインコンテナも同じPVCをマウントし、クローン済みリポジトリにアクセス
 - 親タスクが存在する場合は親タスクのPVCを子タスクでも利用
+- 既存のPVCをマウントする場合は、タスクの環境変数で指定可能
+  - `KERUTA_PVC_NAME`: マウントするPVCの名前
+  - `KERUTA_PVC_MOUNT_PATH`: マウントするパス（デフォルト: `/pvc`）
 - ストレージクラス（StorageClass）を指定可能
   - システム全体のデフォルト設定
   - リポジトリごとの設定
   - タスクごとの設定（優先度: タスク > リポジトリ > システムデフォルト）
 
 ## サンプル
+
+### リポジトリ用PVCの例
 ```yaml
 # 親タスクがない場合は新しいPVCを作成
 apiVersion: v1
@@ -63,6 +68,33 @@ spec:
           volumeMounts:
             - name: git-repo
               mountPath: /git-repo
+      restartPolicy: Never
+```
+
+### 既存PVCをマウントする例
+```yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: keruta-job-with-existing-pvc
+spec:
+  template:
+    spec:
+      volumes:
+        - name: pvc-volume
+          persistentVolumeClaim:
+            claimName: existing-pvc-name  # 既存のPVC名
+      containers:
+        - name: main
+          image: nginx:latest
+          env:
+            - name: KERUTA_PVC_NAME
+              value: "existing-pvc-name"
+            - name: KERUTA_PVC_MOUNT_PATH
+              value: "/data"  # マウントパスを指定（省略時は/pvc）
+          volumeMounts:
+            - name: pvc-volume
+              mountPath: /data
       restartPolicy: Never
 ```
 
