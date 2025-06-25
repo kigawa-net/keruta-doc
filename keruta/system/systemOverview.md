@@ -1,25 +1,20 @@
 # システム概要・アーキテクチャ
 
-[目次に戻る](./taskQueueSystemDesign.md)
+> kerutaシステムの全体像・アーキテクチャ図・主要コンポーネントの概要をまとめます。
 
-- [データモデル](./dataModel.md)
-- [API仕様](./apiSpec.md)
-- [Kotlin実装例](./kotlinExamples.md)
-- [Kubernetes構成・デプロイ手順](./kubernetesAndDeploy.md)
-- [エラー発生時の自動修正タスク追加仕様](./autoFixTask.md)
-- [監視・ヘルスチェック](./monitoring.md)
-- [まとめ・関連リンク](./summaryAndLinks.md)
+## 目次
+- [システム概要](#システム概要)
+- [アーキテクチャ図](#アーキテクチャ図)
+- [主要コンポーネント](#主要コンポーネント)
+- [関連ドキュメント](#関連ドキュメント)
 
 ---
 
 ## システム概要
-小規模チーム向けの軽量なコーディングエージェントタスクキューシステム。KotlinとKubernetesを活用し、タスク管理・自動化を実現します。
+kerutaは、小規模チーム向けの軽量なコーディングエージェントタスクキューシステムです。KotlinとKubernetesを活用し、タスク管理・自動化・Gitリポジトリ連携を実現します。
 
-## アーキテクチャ
-- Web UI, API Service(Spring Boot), MongoDB, Agent/Worker Pods
-- シンプルなREST APIとワーカーによる自動処理
+## アーキテクチャ図
 
-### 全体構成（シンプル版）
 ```
            ┌─────────────────────────────────┐
            │      Kubernetes Cluster         │
@@ -42,14 +37,33 @@
            └─────────────────────────────────┘
 ```
 
-### コンポーネント
+## 主要コンポーネント
 
-#### API Service (Kotlin)
-- Spring Boot による軽量REST API
-- タスクの受付・状態管理
-- シンプルな認証機能
+### API Service (Kotlin)
+- Spring BootによるREST API
+- タスク受付・状態管理・認証
 
-#### Worker Service (Kotlin)
+### Worker/Agent Pods
 - タスク処理ワーカー
-- 基本的なエージェント実行機能
-- MongoDBからのタスク取得・状態更新 
+- MongoDBからのタスク取得・状態更新
+
+### Web UI / 管理パネル
+- タスク・ドキュメント・リポジトリ管理
+
+### MongoDB
+- タスク・ドキュメント・ユーザー等のデータ永続化
+
+## 関連ドキュメント
+- [システム詳細・セットアップ](./projectDetails.md)
+- [API仕様詳細](./apiSpec.md)
+- [データモデル定義](./dataModel.md)
+
+[目次に戻る](./taskQueueSystemDesign.md)
+
+- [データモデル](./dataModel.md)
+- [API仕様](./apiSpec.md)
+- [Kotlin実装例](./kotlinExamples.md)
+- [Kubernetes構成・デプロイ手順](./kubernetesAndDeploy.md)
+- [エラー発生時の自動修正タスク追加仕様](./autoFixTask.md)
+- [監視・ヘルスチェック](./monitoring.md)
+- [まとめ・関連リンク](./summaryAndLinks.md) 
