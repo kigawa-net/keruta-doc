@@ -34,7 +34,7 @@
 クリーンアップジョブの挙動は、kerutaシステムの管理パネルから設定可能です。特別な設定は通常不要ですが、使用するコンテナイメージやリソース制限は環境に応じて調整が必要になる場合があります。
 
 ## サンプル
-以下は、クリーンアップジョブのサンプルマニフェストです。このジョブは `curl` コマンドを利用して `keruta-api` に成果物をアップロードするシンプルな例です。
+以下は、クリーンアップジョブのサンプルマニフェストです。このジョブはkeruta-agentを利用して成果物をアップロードする例です。
 
 ```yaml
 apiVersion: batch/v1
@@ -46,22 +46,39 @@ spec:
     spec:
       containers:
         - name: cleanup-container
-          image: curlimages/curl:latest
+          image: keruta-agent:latest # keruta-agentイメージ
           command:
-            - "/bin/sh"
-            - "-c"
-            - |
-              # 成果物（例: result.txt）をAPIにアップロード
-              curl -X POST -F "file=@/path/to/result.txt" http://keruta-api.default.svc.cluster.local/api/tasks/${KERUTA_TASK_ID}/documents
+            - "keruta-agent"
+            - "cleanup"
+            - "--task-id"
+            - "$(KERUTA_TASK_ID)"
+            - "--api-url"
+            - "$(KERUTA_API_URL)"
+            - "--source-pod"
+            - "$(KERUTA_SOURCE_POD)"
+          env:
+            - name: KERUTA_TASK_ID
+              value: "123"
+            - name: KERUTA_API_URL
+              value: "http://keruta-api:8080"
+            - name: KERUTA_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: keruta-api-token
+                  key: token
+            - name: KERUTA_SOURCE_POD
+              value: "keruta-job-task123-pod-xyz"
       restartPolicy: Never
 ```
 
 ## 注意点
 - クリーンアップジョブが使用するサービスアカウントには、`keruta-api`へのアクセス権限が必要です。
 - ネットワークポリシーで`keruta-api`への通信が許可されている必要があります。
-- 成果物の収集ロジックは、メインジョブが成果物をどの様に出力するかに依存します。サイドカーコンテナやInit Containerを利用して成果物を共有ボリュームに配置するなどの設計が考えられます。
+- 成果物の収集ロジックは、メインジョブが成果物をどの様に出力するかに依存します。keruta-agentは自動的に成果物の収集とアップロードを行います。
+- keruta-agentは、メインジョブのPodから成果物を収集し、APIサーバーに送信します。
 
 ## 関連リンク
 - [kubernetesIntegration.md](./kubernetesIntegration.md)
 - [kubernetesJobSpec.md](./kubernetesJobSpec.md)
-- [kubernetesPVC.md](./kubernetesPVC.md) 
+- [kubernetesPVC.md](./kubernetesPVC.md)
+- [keruta-agent コマンドリファレンス](../keruta-agent/commandReference.md) 

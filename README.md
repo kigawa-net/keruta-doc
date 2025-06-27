@@ -5,7 +5,7 @@
 ## サブプロジェクト
 - `keruta`: keruta APIサーバーの設計・運用ドキュメント（`keruta/` ディレクトリに配置）
 - `keruta-github`: kerutaをGitHubから操作するためのツール/サービス（`keruta-github/` ディレクトリに配置）
-- `keruta-agent`: kerutaによって実行されるjobで利用できるkerutaコマンドを実装するサブプロジェクト（`keruta-agent/` ディレクトリに配置）
+- `keruta-agent`: kerutaによって実行されるKubernetes Job内でタスク実行を統合的に管理するCLIツール（`keruta-agent/` ディレクトリに配置）
 
 ## ドキュメント一覧
 
@@ -55,9 +55,9 @@
   - モニタリング
 
 #### setup
-- [installScriptSpecification.md](keruta/misc/installScriptSpecification.md)
+- [installScriptSpecification.md](keruta/setup/installScriptSpecification.md)
   - インストールスクリプト仕様
-- [setupScript.md](keruta/misc/setupScript.md)
+- [setupScript.md](keruta/setup/setupScript.md)
   - セットアップスクリプト
 
 #### system

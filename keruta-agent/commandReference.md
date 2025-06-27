@@ -5,6 +5,7 @@
 ## 目次
 - [概要](#概要)
 - [基本コマンド](#基本コマンド)
+- [Kubernetes統合コマンド](#kubernetes統合コマンド)
 - [ユーティリティコマンド](#ユーティリティコマンド)
 - [使用例](#使用例)
 - [環境変数](#環境変数)
@@ -84,6 +85,81 @@ keruta progress <percentage> [options]
 **例:**
 ```bash
 keruta progress 50 --message "データ処理中..."
+```
+
+## Kubernetes統合コマンド
+
+### `keruta init`
+Init Containerで実行される初期化処理を行います。
+
+```bash
+keruta init [options]
+```
+
+**オプション:**
+- `--repository-id <id>`: リポジトリID（環境変数KERUTA_REPOSITORY_IDから自動取得がデフォルト）
+- `--document-id <id>`: ドキュメントID（環境変数KERUTA_DOCUMENT_IDから自動取得がデフォルト）
+- `--api-url <url>`: keruta APIのURL（環境変数KERUTA_API_ENDPOINTから自動取得がデフォルト）
+- `--work-dir <path>`: 作業ディレクトリ（デフォルト: /work）
+- `--log-level <level>`: ログレベル
+
+**機能:**
+- リポジトリのクローン
+- git-exclude設定の追加
+- インストールスクリプトの取得と実行
+- ドキュメントの取得
+
+**例:**
+```bash
+keruta init --repository-id repo123 --work-dir /work
+```
+
+### `keruta run`
+メインコンテナで実行されるタスク処理を行います。
+
+```bash
+keruta run [options]
+```
+
+**オプション:**
+- `--task-id <id>`: タスクID（環境変数KERUTA_TASK_IDから自動取得がデフォルト）
+- `--api-url <url>`: keruta APIのURL（環境変数KERUTA_API_URLから自動取得がデフォルト）
+- `--work-dir <path>`: 作業ディレクトリ（デフォルト: /work）
+- `--log-level <level>`: ログレベル
+- `--auto-start`: 自動的にタスク開始を実行（デフォルト: true）
+
+**機能:**
+- タスクの開始（--auto-start=trueの場合）
+- タスク実行の監視
+- ログの自動収集
+- エラーハンドリング
+
+**例:**
+```bash
+keruta run --task-id task123 --work-dir /work
+```
+
+### `keruta cleanup`
+クリーンアップジョブで実行される後処理を行います。
+
+```bash
+keruta cleanup [options]
+```
+
+**オプション:**
+- `--task-id <id>`: タスクID（環境変数KERUTA_TASK_IDから自動取得がデフォルト）
+- `--api-url <url>`: keruta APIのURL（環境変数KERUTA_API_URLから自動取得がデフォルト）
+- `--source-pod <name>`: 成果物を収集するソースPod名（環境変数KERUTA_SOURCE_PODから自動取得がデフォルト）
+- `--log-level <level>`: ログレベル
+
+**機能:**
+- メインジョブのPodから成果物を収集
+- 成果物をAPIサーバーにアップロード
+- タスクステータスの更新
+
+**例:**
+```bash
+keruta cleanup --task-id task123 --source-pod keruta-job-task123-pod-xyz
 ```
 
 ## ユーティリティコマンド
@@ -173,6 +249,18 @@ keruta progress 75 --message "データの処理中..."
 keruta success --message "データ処理が完了しました"
 ```
 
+### Kubernetes統合実行例
+```bash
+# Init Containerでの実行
+keruta init --repository-id repo123 --work-dir /work
+
+# メインコンテナでの実行
+keruta run --task-id task123 --work-dir /work
+
+# クリーンアップジョブでの実行
+keruta cleanup --task-id task123 --source-pod keruta-job-task123-pod-xyz
+```
+
 ### エラーハンドリング例
 ```bash
 #!/bin/bash
@@ -206,20 +294,19 @@ keruta success
 
 ## 環境変数
 
+keruta-agentは以下の環境変数を利用します：
+
 ### 必須環境変数
-| 変数名 | 説明 | 例 |
-|--------|------|-----|
-| `KERUTA_TASK_ID` | タスクの一意識別子 | `123e4567-e89b-12d3-a456-426614174000` |
-| `KERUTA_API_URL` | keruta APIのURL | `http://keruta-api:8080` |
-| `KERUTA_API_TOKEN` | API認証トークン | `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...` |
+- `KERUTA_TASK_ID`: タスクID
+- `KERUTA_API_URL`: keruta APIのURL
+- `KERUTA_API_TOKEN`: keruta APIの認証トークン
 
 ### オプション環境変数
-| 変数名 | 説明 | デフォルト値 |
-|--------|------|-------------|
-| `KERUTA_LOG_LEVEL` | ログレベル | `INFO` |
-| `KERUTA_AUTO_FIX_ENABLED` | 自動修正タスク作成 | `true` |
-| `KERUTA_RETRY_COUNT` | リトライ回数 | `3` |
-| `KERUTA_TIMEOUT` | API呼び出しタイムアウト（秒） | `30` |
+- `KERUTA_REPOSITORY_ID`: リポジトリID（initコマンド用）
+- `KERUTA_DOCUMENT_ID`: ドキュメントID（initコマンド用）
+- `KERUTA_API_ENDPOINT`: keruta APIのエンドポイント（initコマンド用）
+- `KERUTA_SOURCE_POD`: ソースPod名（cleanupコマンド用）
+- `KERUTA_LOG_LEVEL`: ログレベル（デフォルト: INFO）
 
 ---
 

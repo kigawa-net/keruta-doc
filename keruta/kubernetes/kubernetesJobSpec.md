@@ -22,7 +22,8 @@ kerutaシステムで利用するKubernetes Job/Podの設計ポイントをま�
 - ServiceAccountやRBAC、Secretsで最小権限実行
 - Podの標準出力・標準エラーはKubernetesログとして取得
 - Jobの終了コードや状態でタスクの成否を判定
-- **initコンテナ**: タスク実行前の準備処理（リポジトリのクローン、ファイルのダウンロード等）は、initコンテナ内でエージェントが実行します。
+- **keruta-agent**: タスク実行はkeruta-agentが行い、タスクステータスの更新、ログ収集、エラーハンドリングを統合的に管理します。
+- **initコンテナ**: タスク実行前の準備処理（リポジトリのクローン、ファイルのダウンロード等）は、initコンテナ内でkeruta-agentが実行します。
 
 ## サンプル
 ```yaml
@@ -38,23 +39,45 @@ spec:
         - name: keruta-agent-init
           image: <AGENT_IMAGE> # keruta-agentイメージ
           command:
-            - "sh"
-            - "-c"
-            - |
-              mkdir -p /work/.keruta
-              # エージェントがリポジトリのクローン、インストールスクリプトの実行、
-              # APIからのファイル取得などの準備処理を行います。
-              echo "Setup complete."
+            - "keruta-agent"
+            - "init"
+            - "--task-id"
+            - "$(KERUTA_TASK_ID)"
+            - "--api-url"
+            - "$(KERUTA_API_URL)"
+          env:
+            - name: KERUTA_TASK_ID
+              value: "123"
+            - name: KERUTA_API_URL
+              value: "http://keruta-api:8080"
+            - name: KERUTA_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: keruta-api-token
+                  key: token
           volumeMounts:
             - name: workdir
               mountPath: /work
       containers:
         - name: main
-          image: <TASK_IMAGE>
-          command: ["run-task"]
+          image: <AGENT_IMAGE> # keruta-agentイメージ
+          command: 
+            - "keruta-agent"
+            - "run"
+            - "--task-id"
+            - "$(KERUTA_TASK_ID)"
+            - "--api-url"
+            - "$(KERUTA_API_URL)"
           env:
             - name: KERUTA_TASK_ID
               value: "123"
+            - name: KERUTA_API_URL
+              value: "http://keruta-api:8080"
+            - name: KERUTA_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: keruta-api-token
+                  key: token
             # ...他の環境変数...
           volumeMounts:
             - name: workdir
@@ -68,8 +91,11 @@ spec:
 ## 注意点
 - Jobに紐づくPodが`CrashLoopBackOff`等の異常状態で長時間継続した場合は失敗扱い
 - セキュリティ要件に応じてRBACやSecretsを適切に設定
+- keruta-agentはタスクの実行状況を自動的にAPIサーバーに報告します
 
 ## 関連リンク
 - [Kubernetesインテグレーション概要](./kubernetesIntegration.md)
 - [Init Containerによる事前準備](./kubernetesInitContainer.md)
+- [keruta-agent コマンドリファレンス](../keruta-agent/commandReference.md)
+- [keruta-agent 実装例](../keruta-agent/implementation.md)
 - [永続ボリューム(PVC)について](./kubernetesPVC.md) 
