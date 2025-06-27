@@ -4,8 +4,7 @@
 
 ## 目次
 - [概要](#概要)
-- [基本コマンド](#基本コマンド)
-- [Kubernetes統合コマンド](#kubernetes統合コマンド)
+- [メインコマンド](#メインコマンド)
 - [ユーティリティコマンド](#ユーティリティコマンド)
 - [使用例](#使用例)
 - [環境変数](#環境変数)
@@ -14,152 +13,42 @@
 
 keruta-agentは、kerutaシステムによってKubernetes Jobとして実行されるPod内で動作するCLIツールです。タスクの実行状況をkeruta APIサーバーに報告し、ログの収集、エラーハンドリングなどの機能を提供します。
 
-## 基本コマンド
+## メインコマンド
 
-### `keruta start`
-タスクの実行を開始し、ステータスをPROCESSINGに更新します。
+### `keruta execute`
+タスクを統合的に実行します。タスク情報はkerutaのAPIから自動取得し、初期化から実行、ログ収集まで統合的に管理します。
 
 ```bash
-keruta start [options]
+keruta execute [options]
 ```
 
 **オプション:**
-- `--task-id <id>`: タスクIDを指定（環境変数KERUTA_TASK_IDから自動取得がデフォルト）
+- `--task-id <id>`: タスクID（環境変数KERUTA_TASK_IDから自動取得がデフォルト）
 - `--api-url <url>`: keruta APIのURL（環境変数KERUTA_API_URLから自動取得がデフォルト）
+- `--work-dir <path>`: 作業ディレクトリ（デフォルト: /work）
 - `--log-level <level>`: ログレベル（DEBUG, INFO, WARN, ERROR）
-
-**例:**
-```bash
-#!/bin/bash
-keruta start --log-level INFO
-# タスク処理を実行
-```
-
-### `keruta success`
-タスクの成功を報告し、ステータスをCOMPLETEDに更新します。
-
-```bash
-keruta success [options]
-```
-
-**オプション:**
-- `--message <message>`: 成功メッセージ
-
-**例:**
-```bash
-# 処理完了後
-keruta success --message "データ処理が正常に完了しました"
-```
-
-### `keruta fail`
-タスクの失敗を報告し、ステータスをFAILEDに更新します。
-
-```bash
-keruta fail [options]
-```
-
-**オプション:**
-- `--message <message>`: エラーメッセージ
-- `--error-code <code>`: エラーコード
-- `--auto-fix`: 自動修正タスクを作成するかどうか
-
-**例:**
-```bash
-# エラー発生時
-keruta fail --message "データベース接続に失敗しました" --error-code DB_CONNECTION_ERROR
-```
-
-### `keruta progress`
-タスクの進捗率を更新します。
-
-```bash
-keruta progress <percentage> [options]
-```
-
-**引数:**
-- `percentage`: 進捗率（0-100）
-
-**オプション:**
-- `--message <message>`: 進捗メッセージ
-
-**例:**
-```bash
-keruta progress 50 --message "データ処理中..."
-```
-
-## Kubernetes統合コマンド
-
-### `keruta init`
-Init Containerで実行される初期化処理を行います。
-
-```bash
-keruta init [options]
-```
-
-**オプション:**
-- `--repository-id <id>`: リポジトリID（環境変数KERUTA_REPOSITORY_IDから自動取得がデフォルト）
-- `--document-id <id>`: ドキュメントID（環境変数KERUTA_DOCUMENT_IDから自動取得がデフォルト）
-- `--api-url <url>`: keruta APIのURL（環境変数KERUTA_API_ENDPOINTから自動取得がデフォルト）
-- `--work-dir <path>`: 作業ディレクトリ（デフォルト: /work）
-- `--log-level <level>`: ログレベル
+- `--skip-init`: 初期化処理をスキップ（デフォルト: false）
+- `--auto-cleanup`: 自動的にクリーンアップを実行（デフォルト: true）
 
 **機能:**
-- リポジトリのクローン
-- git-exclude設定の追加
-- インストールスクリプトの取得と実行
-- ドキュメントの取得
+1. **タスク情報取得**: kerutaのAPIからタスク情報（リポジトリID、ドキュメントID等）を自動取得
+2. **初期化処理**: リポジトリのクローン、git-exclude設定、インストールスクリプトの取得と実行、ドキュメントの取得
+3. **タスク実行**: タスクの開始、実行、監視
+4. **ログ収集**: 実行ログの自動収集と送信
+5. **エラーハンドリング**: エラー発生時の適切な処理
+6. **クリーンアップ**: 成果物の収集とアップロード（--auto-cleanup=trueの場合）
 
 **例:**
 ```bash
-keruta init --repository-id repo123 --work-dir /work
-```
+# 基本的な実行
+keruta execute --task-id task123
 
-### `keruta run`
-メインコンテナで実行されるタスク処理を行います。
-
-```bash
-keruta run [options]
-```
-
-**オプション:**
-- `--task-id <id>`: タスクID（環境変数KERUTA_TASK_IDから自動取得がデフォルト）
-- `--api-url <url>`: keruta APIのURL（環境変数KERUTA_API_URLから自動取得がデフォルト）
-- `--work-dir <path>`: 作業ディレクトリ（デフォルト: /work）
-- `--log-level <level>`: ログレベル
-- `--auto-start`: 自動的にタスク開始を実行（デフォルト: true）
-
-**機能:**
-- タスクの開始（--auto-start=trueの場合）
-- タスク実行の監視
-- ログの自動収集
-- エラーハンドリング
-
-**例:**
-```bash
-keruta run --task-id task123 --work-dir /work
-```
-
-### `keruta cleanup`
-クリーンアップジョブで実行される後処理を行います。
-
-```bash
-keruta cleanup [options]
-```
-
-**オプション:**
-- `--task-id <id>`: タスクID（環境変数KERUTA_TASK_IDから自動取得がデフォルト）
-- `--api-url <url>`: keruta APIのURL（環境変数KERUTA_API_URLから自動取得がデフォルト）
-- `--source-pod <name>`: 成果物を収集するソースPod名（環境変数KERUTA_SOURCE_PODから自動取得がデフォルト）
-- `--log-level <level>`: ログレベル
-
-**機能:**
-- メインジョブのPodから成果物を収集
-- 成果物をAPIサーバーにアップロード
-- タスクステータスの更新
-
-**例:**
-```bash
-keruta cleanup --task-id task123 --source-pod keruta-job-task123-pod-xyz
+# カスタム設定での実行
+keruta execute \
+    --task-id task123 \
+    --api-url http://keruta-api:8080 \
+    --work-dir /work \
+    --log-level DEBUG
 ```
 
 ## ユーティリティコマンド
@@ -233,32 +122,22 @@ keruta config set log_level DEBUG
 #!/bin/bash
 set -e
 
-# タスク開始
-keruta start
-
-# 進捗報告
-keruta progress 25 --message "データの読み込み中..."
-
-# 処理実行
-python process_data.py
-
-# 進捗報告
-keruta progress 75 --message "データの処理中..."
-
-# タスク成功
-keruta success --message "データ処理が完了しました"
+# 統合的なタスク実行（タスク情報はAPIから自動取得）
+keruta execute --task-id task123
 ```
 
-### Kubernetes統合実行例
+### カスタム設定での実行例
 ```bash
-# Init Containerでの実行
-keruta init --repository-id repo123 --work-dir /work
+#!/bin/bash
+set -e
 
-# メインコンテナでの実行
-keruta run --task-id task123 --work-dir /work
-
-# クリーンアップジョブでの実行
-keruta cleanup --task-id task123 --source-pod keruta-job-task123-pod-xyz
+# カスタム設定での統合実行
+keruta execute \
+    --task-id task123 \
+    --api-url http://keruta-api:8080 \
+    --work-dir /work \
+    --log-level DEBUG \
+    --auto-cleanup
 ```
 
 ### エラーハンドリング例
@@ -266,30 +145,23 @@ keruta cleanup --task-id task123 --source-pod keruta-job-task123-pod-xyz
 #!/bin/bash
 set -e
 
-keruta start
-
 # エラーハンドリング
-trap 'keruta fail --message "予期しないエラーが発生しました: $?"' ERR
+trap 'keruta log ERROR "予期しないエラーが発生しました: $?"' ERR
 
-# 処理実行
-python risky_operation.py
-
-keruta success
+# 統合的なタスク実行
+keruta execute --task-id task123
 ```
 
 ### 構造化ログの使用例
 ```bash
 #!/bin/bash
-keruta start
 
-keruta log INFO "処理を開始します"
-keruta log DEBUG "設定ファイルを読み込み中..."
+# 統合的なタスク実行
+keruta execute --task-id task123
 
-# 処理実行
-python main.py
-
-keruta log INFO "処理が完了しました"
-keruta success
+# 追加のログ送信
+keruta log INFO "追加の処理を実行中..."
+keruta log DEBUG "詳細なデバッグ情報"
 ```
 
 ## 環境変数
@@ -302,11 +174,14 @@ keruta-agentは以下の環境変数を利用します：
 - `KERUTA_API_TOKEN`: keruta APIの認証トークン
 
 ### オプション環境変数
-- `KERUTA_REPOSITORY_ID`: リポジトリID（initコマンド用）
-- `KERUTA_DOCUMENT_ID`: ドキュメントID（initコマンド用）
-- `KERUTA_API_ENDPOINT`: keruta APIのエンドポイント（initコマンド用）
-- `KERUTA_SOURCE_POD`: ソースPod名（cleanupコマンド用）
 - `KERUTA_LOG_LEVEL`: ログレベル（デフォルト: INFO）
+- `KERUTA_WORK_DIR`: 作業ディレクトリ（デフォルト: /work）
+
+### APIから自動取得される情報
+- リポジトリID
+- ドキュメントID
+- タスク設定
+- 実行パラメータ
 
 ---
 

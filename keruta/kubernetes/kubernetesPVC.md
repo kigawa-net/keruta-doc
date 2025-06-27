@@ -72,35 +72,12 @@ spec:
           persistentVolumeClaim:
             # 親タスクがある場合は親のPVC名、ない場合は新規PVC名を指定
             claimName: git-repo-pvc-task123
-      initContainers:
-        - name: keruta-agent-init
-          image: keruta-agent:latest # keruta-agentイメージ
-          command: 
-            - "keruta-agent"
-            - "init"
-            - "--repository-id"
-            - "$(KERUTA_REPOSITORY_ID)"
-            - "--api-url"
-            - "$(KERUTA_API_URL)"
-          env:
-            - name: KERUTA_REPOSITORY_ID
-              value: "repo123"
-            - name: KERUTA_API_URL
-              value: "http://keruta-api:8080"
-            - name: KERUTA_API_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: keruta-api-token
-                  key: token
-          volumeMounts:
-            - name: git-repo
-              mountPath: /work
       containers:
         - name: main
           image: keruta-agent:latest # keruta-agentイメージ
           command:
             - "keruta-agent"
-            - "run"
+            - "execute"
             - "--task-id"
             - "$(KERUTA_TASK_ID)"
             - "--api-url"
@@ -139,7 +116,7 @@ spec:
           image: keruta-agent:latest # keruta-agentイメージ
           command:
             - "keruta-agent"
-            - "run"
+            - "execute"
             - "--task-id"
             - "$(KERUTA_TASK_ID)"
             - "--api-url"
@@ -164,10 +141,9 @@ spec:
 - PVCの削除は手動で行う必要があります（Job削除時には自動削除されません）
 - ストレージクラスによっては、アクセスモードの制限があります
 - 親タスクのPVCを継承する場合、親タスクが完了していてもPVCは残ります
-- keruta-agentは自動的にリポジトリのクローンと管理を行います
+- keruta-agentはタスク情報をAPIから自動取得し、リポジトリのクローンと管理を自動的に行います
 
 ## 関連リンク
 - [Kubernetes Job/Pod仕様](./kubernetesJobSpec.md)
-- [Init Containerによる事前準備](./kubernetesInitContainer.md)
 - [Kubernetesインテグレーション概要](./kubernetesIntegration.md)
-- [keruta-agent コマンドリファレンス](../keruta-agent/commandReference.md) 
+- [keruta-agent コマンドリファレンス](../keruta-agent/commandReference.md)

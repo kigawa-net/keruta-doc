@@ -27,10 +27,7 @@ keruta-agent/
 │   │   └── errors.go               # エラーハンドリング
 │   ├── commands/
 │   │   ├── root.go                 # ルートコマンド
-│   │   ├── start.go                # startコマンド
-│   │   ├── success.go              # successコマンド
-│   │   ├── fail.go                 # failコマンド
-│   │   ├── progress.go             # progressコマンド
+│   │   ├── execute.go              # executeコマンド（統合実行）
 │   │   ├── log.go                  # logコマンド
 │   │   ├── health.go               # healthコマンド
 │   │   └── config.go               # configコマンド
@@ -92,6 +89,33 @@ func NewClient(baseURL, token string) *Client {
     }
 }
 
+func (c *Client) GetTask(taskID string) (*Task, error) {
+    req, err := http.NewRequest("GET", c.baseURL+"/tasks/"+taskID, nil)
+    if err != nil {
+        return nil, err
+    }
+    
+    req.Header.Set("Authorization", "Bearer "+c.token)
+    req.Header.Set("User-Agent", "keruta-agent/1.0.0")
+    
+    resp, err := c.httpClient.Do(req)
+    if err != nil {
+        return nil, err
+    }
+    defer resp.Body.Close()
+    
+    if resp.StatusCode >= 400 {
+        return nil, fmt.Errorf("API request failed with status: %d", resp.StatusCode)
+    }
+    
+    var task Task
+    if err := json.NewDecoder(resp.Body).Decode(&task); err != nil {
+        return nil, err
+    }
+    
+    return &task, nil
+}
+
 func (c *Client) UpdateTaskStatus(taskID, status, message string, progress int) error {
     data := map[string]interface{}{
         "status":   status,
@@ -120,6 +144,46 @@ func (c *Client) SendLog(taskID, level, message string) error {
     return c.makeRequest("POST", fmt.Sprintf("/tasks/%s/logs", taskID), data)
 }
 
+func (c *Client) UploadDocument(taskID, filePath string) error {
+    file, err := os.Open(filePath)
+    if err != nil {
+        return err
+    }
+    defer file.Close()
+    
+    body := &bytes.Buffer{}
+    writer := multipart.NewWriter(body)
+    part, err := writer.CreateFormFile("file", filepath.Base(filePath))
+    if err != nil {
+        return err
+    }
+    
+    if _, err := io.Copy(part, file); err != nil {
+        return err
+    }
+    writer.Close()
+    
+    req, err := http.NewRequest("POST", c.baseURL+"/tasks/"+taskID+"/documents", body)
+    if err != nil {
+        return err
+    }
+    
+    req.Header.Set("Content-Type", writer.FormDataContentType())
+    req.Header.Set("Authorization", "Bearer "+c.token)
+    
+    resp, err := c.httpClient.Do(req)
+    if err != nil {
+        return err
+    }
+    defer resp.Body.Close()
+    
+    if resp.StatusCode >= 400 {
+        return fmt.Errorf("API request failed with status: %d", resp.StatusCode)
+    }
+    
+    return nil
+}
+
 func (c *Client) makeRequest(method, path string, data interface{}) error {
     jsonData, err := json.Marshal(data)
     if err != nil {
@@ -146,6 +210,17 @@ func (c *Client) makeRequest(method, path string, data interface{}) error {
     }
     
     return nil
+}
+
+type Task struct {
+    ID           string `json:"id"`
+    Title        string `json:"title"`
+    Description  string `json:"description"`
+    Status       string `json:"status"`
+    RepositoryID string `json:"repositoryId"`
+    DocumentID   string `json:"documentId"`
+    CreatedAt    string `json:"createdAt"`
+    UpdatedAt    string `json:"updatedAt"`
 }
 ```
 
@@ -201,288 +276,297 @@ func Load() (*Config, error) {
 }
 
 func setDefaults() {
-    viper.SetDefault("api.url", "http://keruta-api:8080")
-    viper.SetDefault("api.timeout", "30s")
+    viper.SetDefault("api.timeout", 30*time.Second)
     viper.SetDefault("logging.level", "INFO")
-    viper.SetDefault("logging.format", "json")
+    viper.SetDefault("logging.format", "text")
     viper.SetDefault("error_handling.auto_fix", true)
     viper.SetDefault("error_handling.retry_count", 3)
 }
 ```
 
-### 3. ログ機能 (`internal/logger/logger.go`)
-```go
-package logger
-
-import (
-    "os"
-    
-    "github.com/sirupsen/logrus"
-)
-
-var log *logrus.Logger
-
-func Init(level, format string) {
-    log = logrus.New()
-    
-    // ログレベル設定
-    switch level {
-    case "DEBUG":
-        log.SetLevel(logrus.DebugLevel)
-    case "INFO":
-        log.SetLevel(logrus.InfoLevel)
-    case "WARN":
-        log.SetLevel(logrus.WarnLevel)
-    case "ERROR":
-        log.SetLevel(logrus.ErrorLevel)
-    default:
-        log.SetLevel(logrus.InfoLevel)
-    }
-    
-    // ログ形式設定
-    if format == "json" {
-        log.SetFormatter(&logrus.JSONFormatter{})
-    } else {
-        log.SetFormatter(&logrus.TextFormatter{})
-    }
-    
-    log.SetOutput(os.Stdout)
-}
-
-func Debug(args ...interface{}) {
-    log.Debug(args...)
-}
-
-func Info(args ...interface{}) {
-    log.Info(args...)
-}
-
-func Warn(args ...interface{}) {
-    log.Warn(args...)
-}
-
-func Error(args ...interface{}) {
-    log.Error(args...)
-}
-
-func Fatal(args ...interface{}) {
-    log.Fatal(args...)
-}
-```
-
-## 実装例
-
-### 1. メインエントリーポイント (`cmd/keruta-agent/main.go`)
-```go
-package main
-
-import (
-    "os"
-    
-    "github.com/spf13/cobra"
-    
-    "keruta-agent/internal/commands"
-    "keruta-agent/internal/config"
-    "keruta-agent/internal/logger"
-)
-
-func main() {
-    // 設定読み込み
-    cfg, err := config.Load()
-    if err != nil {
-        os.Exit(1)
-    }
-    
-    // ログ初期化
-    logger.Init(cfg.Logging.Level, cfg.Logging.Format)
-    
-    // ルートコマンド作成
-    rootCmd := commands.NewRootCommand(cfg)
-    
-    if err := rootCmd.Execute(); err != nil {
-        logger.Error("Command execution failed:", err)
-        os.Exit(1)
-    }
-}
-```
-
-### 2. ルートコマンド (`internal/commands/root.go`)
+### 3. 統合実行コマンド (`internal/commands/execute.go`)
 ```go
 package commands
 
 import (
-    "github.com/spf13/cobra"
-    "keruta-agent/internal/config"
-)
-
-func NewRootCommand(cfg *config.Config) *cobra.Command {
-    rootCmd := &cobra.Command{
-        Use:   "keruta",
-        Short: "keruta-agent - Kubernetes Pod内でタスクを実行するためのCLIツール",
-        Long: `keruta-agentは、kerutaシステムによってKubernetes Jobとして実行されるPod内で動作するCLIツールです。
-タスクの実行状況をkeruta APIサーバーに報告し、ログの収集、エラーハンドリングなどの機能を提供します。`,
-        Version: "1.0.0",
-    }
-    
-    // サブコマンド追加
-    rootCmd.AddCommand(
-        NewStartCommand(cfg),
-        NewSuccessCommand(cfg),
-        NewFailCommand(cfg),
-        NewProgressCommand(cfg),
-        NewLogCommand(cfg),
-        NewHealthCommand(cfg),
-        NewConfigCommand(cfg),
-    )
-    
-    return rootCmd
-}
-```
-
-### 3. Startコマンド (`internal/commands/start.go`)
-```go
-package commands
-
-import (
+    "fmt"
     "os"
+    "os/exec"
+    "path/filepath"
     
-    "github.com/spf13/cobra"
     "keruta-agent/internal/api"
-    "keruta-agent/internal/config"
     "keruta-agent/internal/logger"
 )
 
-func NewStartCommand(cfg *config.Config) *cobra.Command {
-    var taskID, apiURL, logLevel string
+type ExecuteCommand struct {
+    taskID       string
+    apiURL       string
+    workDir      string
+    autoStart    bool
+    skipInit     bool
+    autoCleanup  bool
+}
+
+func NewExecuteCommand() *ExecuteCommand {
+    return &ExecuteCommand{
+        workDir:     "/work",
+        autoStart:   true,
+        skipInit:    false,
+        autoCleanup: true,
+    }
+}
+
+func (c *ExecuteCommand) Execute() error {
+    logger.Info("keruta-agent統合実行を開始します")
     
-    cmd := &cobra.Command{
-        Use:   "start",
-        Short: "タスクの実行を開始し、ステータスをPROCESSINGに更新",
-        RunE: func(cmd *cobra.Command, args []string) error {
-            // 環境変数から値を取得
-            if taskID == "" {
-                taskID = os.Getenv("KERUTA_TASK_ID")
-            }
-            if apiURL == "" {
-                apiURL = os.Getenv("KERUTA_API_URL")
-            }
-            if apiURL == "" {
-                apiURL = cfg.API.URL
-            }
-            
-            token := os.Getenv("KERUTA_API_TOKEN")
-            if token == "" {
-                logger.Fatal("KERUTA_API_TOKEN environment variable is required")
-            }
-            
-            // APIクライアント作成
-            client := api.NewClient(apiURL, token)
-            
-            // タスク開始
-            err := client.UpdateTaskStatus(taskID, "PROCESSING", "タスクを開始します", 0)
-            if err != nil {
-                logger.Error("Failed to start task:", err)
-                return err
-            }
-            
-            logger.Info("Task started successfully")
-            return nil
-        },
+    // APIクライアントの初期化
+    client := api.NewClient(c.apiURL, os.Getenv("KERUTA_API_TOKEN"))
+    
+    // タスク情報の取得
+    task, err := client.GetTask(c.taskID)
+    if err != nil {
+        return fmt.Errorf("タスク情報の取得に失敗しました: %w", err)
     }
     
-    cmd.Flags().StringVar(&taskID, "task-id", "", "タスクID（環境変数KERUTA_TASK_IDから自動取得）")
-    cmd.Flags().StringVar(&apiURL, "api-url", "", "keruta APIのURL（環境変数KERUTA_API_URLから自動取得）")
-    cmd.Flags().StringVar(&logLevel, "log-level", "INFO", "ログレベル（DEBUG, INFO, WARN, ERROR）")
+    logger.Info("タスク情報を取得しました", "task_id", task.ID, "title", task.Title)
     
-    return cmd
+    // 初期化処理
+    if !c.skipInit {
+        if err := c.initialize(client, task); err != nil {
+            return fmt.Errorf("初期化処理に失敗しました: %w", err)
+        }
+    }
+    
+    // タスク開始
+    if c.autoStart {
+        if err := client.UpdateTaskStatus(c.taskID, "PROCESSING", "タスクを開始します", 0); err != nil {
+            return fmt.Errorf("タスク開始に失敗しました: %w", err)
+        }
+    }
+    
+    // タスク実行
+    if err := c.executeTask(client, task); err != nil {
+        return fmt.Errorf("タスク実行に失敗しました: %w", err)
+    }
+    
+    // クリーンアップ処理
+    if c.autoCleanup {
+        if err := c.cleanup(client, task); err != nil {
+            return fmt.Errorf("クリーンアップ処理に失敗しました: %w", err)
+        }
+    }
+    
+    logger.Info("keruta-agent統合実行が完了しました")
+    return nil
+}
+
+func (c *ExecuteCommand) initialize(client *api.Client, task *api.Task) error {
+    logger.Info("初期化処理を開始します")
+    
+    // 作業ディレクトリの作成
+    if err := os.MkdirAll(c.workDir, 0755); err != nil {
+        return err
+    }
+    
+    // リポジトリのクローン
+    if task.RepositoryID != "" {
+        if err := c.cloneRepository(task.RepositoryID); err != nil {
+            return err
+        }
+    }
+    
+    // インストールスクリプトの実行
+    if err := c.runInstallScript(); err != nil {
+        return err
+    }
+    
+    // ドキュメントの取得
+    if task.DocumentID != "" {
+        if err := c.fetchDocument(client, task.DocumentID); err != nil {
+            return err
+        }
+    }
+    
+    logger.Info("初期化処理が完了しました")
+    return nil
+}
+
+func (c *ExecuteCommand) cloneRepository(repositoryID string) error {
+    logger.Info("リポジトリをクローン中...", "repository_id", repositoryID)
+    
+    // git cloneコマンドの実行
+    cmd := exec.Command("git", "clone", "--depth", "1", "--single-branch", 
+        fmt.Sprintf("https://github.com/example/%s.git", repositoryID), c.workDir)
+    cmd.Stdout = os.Stdout
+    cmd.Stderr = os.Stderr
+    
+    if err := cmd.Run(); err != nil {
+        return err
+    }
+    
+    // git-exclude設定
+    excludeFile := filepath.Join(c.workDir, ".git", "info", "exclude")
+    if err := os.MkdirAll(filepath.Dir(excludeFile), 0755); err != nil {
+        return err
+    }
+    
+    f, err := os.OpenFile(excludeFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+    if err != nil {
+        return err
+    }
+    defer f.Close()
+    
+    if _, err := f.WriteString("/.keruta\n"); err != nil {
+        return err
+    }
+    
+    logger.Info("リポジトリのクローンが完了しました")
+    return nil
+}
+
+func (c *ExecuteCommand) runInstallScript() error {
+    installScript := filepath.Join(c.workDir, ".keruta", "install.sh")
+    
+    if _, err := os.Stat(installScript); os.IsNotExist(err) {
+        logger.Info("インストールスクリプトが見つかりません。スキップします。")
+        return nil
+    }
+    
+    logger.Info("インストールスクリプトを実行中...")
+    
+    cmd := exec.Command("sh", installScript)
+    cmd.Dir = c.workDir
+    cmd.Stdout = os.Stdout
+    cmd.Stderr = os.Stderr
+    
+    return cmd.Run()
+}
+
+func (c *ExecuteCommand) fetchDocument(client *api.Client, documentID string) error {
+    logger.Info("ドキュメントを取得中...", "document_id", documentID)
+    
+    // APIからドキュメントを取得する処理
+    // 実装は省略
+    
+    logger.Info("ドキュメントの取得が完了しました")
+    return nil
+}
+
+func (c *ExecuteCommand) executeTask(client *api.Client, task *api.Task) error {
+    logger.Info("タスク実行を開始します")
+    
+    // 進捗更新
+    if err := client.UpdateTaskStatus(c.taskID, "PROCESSING", "タスク実行中", 50); err != nil {
+        return err
+    }
+    
+    // 実際のタスク処理
+    // ここではサンプルとしてsleepを実行
+    cmd := exec.Command("sleep", "10")
+    cmd.Stdout = os.Stdout
+    cmd.Stderr = os.Stderr
+    
+    if err := cmd.Run(); err != nil {
+        return err
+    }
+    
+    // タスク完了
+    if err := client.UpdateTaskStatus(c.taskID, "COMPLETED", "タスクが正常に完了しました", 100); err != nil {
+        return err
+    }
+    
+    logger.Info("タスク実行が完了しました")
+    return nil
+}
+
+func (c *ExecuteCommand) cleanup(client *api.Client, task *api.Task) error {
+    logger.Info("クリーンアップ処理を開始します")
+    
+    // 成果物の収集とアップロード
+    docDir := filepath.Join(c.workDir, ".keruta", "doc")
+    if _, err := os.Stat(docDir); !os.IsNotExist(err) {
+        files, err := os.ReadDir(docDir)
+        if err != nil {
+            return err
+        }
+        
+        for _, file := range files {
+            if !file.IsDir() {
+                filePath := filepath.Join(docDir, file.Name())
+                if err := client.UploadDocument(c.taskID, filePath); err != nil {
+                    logger.Warn("成果物のアップロードに失敗しました", "file", file.Name(), "error", err)
+                } else {
+                    logger.Info("成果物をアップロードしました", "file", file.Name())
+                }
+            }
+        }
+    }
+    
+    logger.Info("クリーンアップ処理が完了しました")
+    return nil
 }
 ```
 
 ## サンプルスクリプト
 
-### 1. 基本的なタスク例 (`examples/basic-task.sh`)
+### 1. 基本的なタスク実行 (`examples/basic-task.sh`)
 ```bash
 #!/bin/bash
 set -e
 
 # 環境変数設定
-export KERUTA_TASK_ID="123e4567-e89b-12d3-a456-426614174000"
+export KERUTA_TASK_ID="test-task-id"
 export KERUTA_API_URL="http://keruta-api:8080"
-export KERUTA_API_TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+export KERUTA_API_TOKEN="test-token"
 
-echo "=== 基本的なタスク実行例 ==="
+# 統合的なタスク実行（タスク情報はAPIから自動取得）
+keruta execute --task-id "$KERUTA_TASK_ID"
 
-# タスク開始
-echo "1. タスクを開始します..."
-keruta start --log-level INFO
-
-# 進捗報告
-echo "2. 進捗を報告します..."
-keruta progress 25 --message "データの読み込み中..."
-
-# 処理実行（シミュレーション）
-echo "3. データ処理を実行します..."
-sleep 5
-
-# 進捗報告
-echo "4. 進捗を更新します..."
-keruta progress 75 --message "データの処理中..."
-
-# タスク成功
-echo "5. タスクを完了します..."
-keruta success --message "データ処理が完了しました"
-
-echo "=== タスク実行完了 ==="
+echo "タスクが正常に完了しました"
 ```
 
-### 2. エラーハンドリング例 (`examples/error-handling.sh`)
+### 2. エラーハンドリング (`examples/error-handling.sh`)
 ```bash
 #!/bin/bash
 set -e
 
-# 環境変数設定
-export KERUTA_TASK_ID="123e4567-e89b-12d3-a456-426614174000"
-export KERUTA_API_URL="http://keruta-api:8080"
-export KERUTA_API_TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+# エラーハンドリング
+trap 'keruta log ERROR "予期しないエラーが発生しました: $?"' ERR
 
-echo "=== エラーハンドリング例 ==="
+# 統合的なタスク実行
+keruta execute --task-id "$KERUTA_TASK_ID"
 
-# タスク開始
-keruta start
-
-# エラーハンドリング設定
-trap 'keruta fail --message "予期しないエラーが発生しました: $?"' ERR
-
-# 構造化ログ送信
-keruta log INFO "処理を開始します"
-keruta log DEBUG "設定ファイルを読み込み中..."
-
-# リスクのある処理（エラーが発生する可能性）
-echo "リスクのある処理を実行します..."
-python risky_operation.py
-
-# 成功時の処理
-keruta log INFO "処理が完了しました"
-keruta success --message "処理が正常に完了しました"
-
-echo "=== エラーハンドリング例完了 ==="
+echo "タスクが正常に完了しました"
 ```
 
 ## テスト
 
-### 1. 単体テスト (`tests/unit/api_test.go`)
+### 1. 単体テスト (`tests/unit/api_client_test.go`)
 ```go
-package api
+package unit
 
 import (
     "testing"
-    "time"
+    
+    "keruta-agent/internal/api"
 )
 
-func TestClient_UpdateTaskStatus(t *testing.T) {
-    client := NewClient("http://test-api:8080", "test-token")
+func TestGetTask(t *testing.T) {
+    client := api.NewClient("http://test-api:8080", "test-token")
     
-    // テストケース
+    task, err := client.GetTask("test-task-id")
+    if err != nil {
+        t.Fatalf("GetTask() error = %v", err)
+    }
+    
+    if task.ID != "test-task-id" {
+        t.Errorf("Expected task ID 'test-task-id', got '%s'", task.ID)
+    }
+}
+
+func TestUpdateTaskStatus(t *testing.T) {
+    client := api.NewClient("http://test-api:8080", "test-token")
+    
     testCases := []struct {
         name     string
         taskID   string
@@ -543,25 +627,31 @@ func TestBasicTaskFlow(t *testing.T) {
     
     client := api.NewClient("http://test-api:8080", "test-token")
     
-    // 1. タスク開始
-    err := client.UpdateTaskStatus("test-task-id", "PROCESSING", "テスト開始", 0)
+    // 1. タスク情報取得
+    task, err := client.GetTask("test-task-id")
+    if err != nil {
+        t.Fatalf("Failed to get task: %v", err)
+    }
+    
+    // 2. タスク開始
+    err = client.UpdateTaskStatus("test-task-id", "PROCESSING", "テスト開始", 0)
     if err != nil {
         t.Fatalf("Failed to start task: %v", err)
     }
     
-    // 2. 進捗更新
+    // 3. 進捗更新
     err = client.UpdateTaskStatus("test-task-id", "PROCESSING", "テスト実行中", 50)
     if err != nil {
         t.Fatalf("Failed to update progress: %v", err)
     }
     
-    // 3. ログ送信
+    // 4. ログ送信
     err = client.SendLog("test-task-id", "INFO", "テストログ")
     if err != nil {
         t.Fatalf("Failed to send log: %v", err)
     }
     
-    // 4. タスク完了
+    // 5. タスク完了
     err = client.UpdateTaskStatus("test-task-id", "COMPLETED", "テスト完了", 100)
     if err != nil {
         t.Fatalf("Failed to complete task: %v", err)
@@ -590,7 +680,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o keruta-agent ./cm
 # 実行イメージ
 FROM alpine:latest
 
-RUN apk --no-cache add ca-certificates
+RUN apk --no-cache add ca-certificates git
 
 WORKDIR /root/
 
@@ -635,7 +725,7 @@ docker-run:
 		-e KERUTA_TASK_ID=test-task-id \
 		-e KERUTA_API_URL=http://host.docker.internal:8080 \
 		-e KERUTA_API_TOKEN=test-token \
-		keruta-agent:latest
+		keruta-agent:latest execute
 
 # インストール
 install: build
@@ -671,23 +761,17 @@ spec:
             secretKeyRef:
               name: keruta-api-token
               key: token
-        command: ["/bin/bash", "-c"]
+        command: ["keruta-agent", "execute"]
         args:
-        - |
-          #!/bin/bash
-          set -e
-          
-          # keruta-agentを使用してタスク実行
-          keruta start
-          
-          # 実際の処理
-          echo "タスク処理を実行中..."
-          sleep 10
-          
-          # タスク完了
-          keruta success --message "タスクが正常に完了しました"
+        - "--task-id"
+        - "$(KERUTA_TASK_ID)"
+        - "--api-url"
+        - "$(KERUTA_API_URL)"
+        - "--work-dir"
+        - "/work"
+        - "--auto-cleanup"
       restartPolicy: Never
   backoffLimit: 3
 ```
 
-この実装例により、keruta-agentの基本的な機能と使用方法を理解できます。実際の開発では、これらのコードをベースに、プロジェクトの要件に合わせてカスタマイズしてください。 
+この実装例により、keruta-agentの統合的な機能と使用方法を理解できます。実際の開発では、これらのコードをベースに、プロジェクトの要件に合わせてカスタマイズしてください。 

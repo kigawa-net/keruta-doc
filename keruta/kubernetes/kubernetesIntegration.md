@@ -19,7 +19,7 @@ kerutaシステムは、Kubernetesを利用してタスクを実行する機能�
 - **リソース管理**: Kubernetesのリソース制限機能を活用
 - **スケーラビリティ**: 必要に応じてPodを水平スケール
 - **堅牢性**: Podの再起動やフェイルオーバーを自動処理
-- **統合管理**: keruta-agentによるタスク実行の統合管理
+- **統合管理**: keruta-agentによるタスク情報の自動取得から実行、クリーンアップまで統合管理
 
 ## セットアップ
 Kubernetes統合の設定はデータベースに保存され、初回起動時は`application.properties`のデフォルト値が使用されます。
@@ -46,7 +46,7 @@ spec:
           image: keruta-agent:latest # keruta-agentイメージ
           command: 
             - "keruta-agent"
-            - "run"
+            - "execute"
             - "--task-id"
             - "$(KERUTA_TASK_ID)"
             - "--api-url"
@@ -73,7 +73,7 @@ spec:
 - 成果物収集機能を利用する場合、kerutaサービスアカウントにはPodに対する`exec`権限が必要です。
 - Podが正常終了後すぐに削除される設定（例：`ttlSecondsAfterFinished`が短い）の場合、ファイル収集に失敗することがあります。
 - 収集対象のファイルサイズには上限が設定されている場合があります。
-- keruta-agentはタスクの実行状況を自動的にAPIサーバーに報告します。
+- keruta-agentはタスク情報をAPIから自動取得し、初期化からクリーンアップまで自動的に行います。
 
 ## FAQ・トラブルシューティング
 - **ポッド作成失敗**: クラスターへの接続設定と権限を確認
@@ -82,6 +82,5 @@ spec:
 
 ## 関連リンク
 - [Kubernetes Job/Pod仕様](./kubernetesJobSpec.md)
-- [Init Containerによる事前準備](./kubernetesInitContainer.md)
 - [永続ボリューム(PVC)について](./kubernetesPVC.md)
 - [keruta-agent コマンドリファレンス](../keruta-agent/commandReference.md)

@@ -4,6 +4,7 @@
 
 ## 目次
 - [概要](#概要)
+- [インストール](#インストール)
 - [アーキテクチャ](#アーキテクチャ)
 - [機能仕様](#機能仕様)
 - [コマンド仕様](#コマンド仕様)
@@ -13,6 +14,40 @@
 - [技術スタック](#技術スタック)
 - [プロジェクト構造](#プロジェクト構造)
 - [関連リンク](#関連リンク)
+
+## インストール
+
+keruta-agentはシェルスクリプトで簡単にインストールできます。
+
+### 例: インストール用シェルスクリプト
+
+```bash
+#!/bin/bash
+set -e
+
+# 最新バージョンのURL（例: v1.0.0、適宜修正）
+AGENT_VERSION="v1.0.0"
+AGENT_URL="https://github.com/your-org/keruta-agent/releases/download/${AGENT_VERSION}/keruta-agent-linux-amd64"
+INSTALL_PATH="/usr/local/bin/keruta-agent"
+
+# ダウンロード
+curl -L -o keruta-agent "${AGENT_URL}"
+
+# 実行権限付与
+chmod +x keruta-agent
+
+# 配置
+sudo mv keruta-agent "${INSTALL_PATH}"
+
+# パス確認
+if ! echo "$PATH" | grep -q "/usr/local/bin"; then
+  echo 'export PATH=$PATH:/usr/local/bin' >> ~/.bashrc
+  export PATH=$PATH:/usr/local/bin
+fi
+
+echo "keruta-agent installed to ${INSTALL_PATH}"
+keruta-agent --version
+```
 
 ## 概要
 `keruta-agent`は、kerutaシステムによってKubernetes Jobとして実行されるPod内で動作するCLIツールです。タスクの実行状況をkeruta APIサーバーに報告し、ログの収集、エラーハンドリングなどの機能を提供します。
