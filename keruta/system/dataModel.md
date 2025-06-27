@@ -31,6 +31,8 @@ data class Task(
     val agentId: String? = null,
     val repositoryId: String? = null, // init container用
     val parentId: String? = null, // 親子タスク用
+    val waitingReason: String? = null, // 入力待ち理由
+    val timeoutAt: LocalDateTime? = null, // 入力待ちタイムアウト時刻
     val createdAt: LocalDateTime = LocalDateTime.now(),
     val updatedAt: LocalDateTime = LocalDateTime.now()
 )
@@ -38,6 +40,7 @@ data class Task(
 enum class TaskStatus {
     PENDING,
     IN_PROGRESS,
+    WAITING_FOR_INPUT, // 入力待ち状態
     COMPLETED,
     CANCELLED,
     FAILED

@@ -1,6 +1,6 @@
 # keruta-agent API仕様書
 
-> **概要**: keruta-agentがkeruta APIサーバーと通信する際のAPI仕様を定義したドキュメントです。
+> **概要**: keruta-agentがkeruta APIサーバーと通信する際のAPI仕様を定義したドキュメントです。サブプロセス実行、入力待ち状態管理、標準入力送信機能を含みます。
 
 ## 目次
 - [概要](#概要)
@@ -10,6 +10,8 @@
 - [エラーハンドリング](#エラーハンドリング)
 - [レート制限](#レート制限)
 - [サンプルコード](#サンプルコード)
+- [データモデル](#データモデル)
+- [データモデル](#データモデル)
 
 ## 概要
 keruta-agentは、keruta APIサーバーとRESTful APIを通じて通信します。すべてのAPI呼び出しはHTTPSで行われ、JWTトークンによる認証が必要です。
@@ -51,37 +53,68 @@ curl -X POST http://keruta-api:8080/api/v1/auth/login \
 
 ## エンドポイント一覧
 
-### 1. タスクステータス更新
+### 1. スクリプト取得
 
-#### PATCH /tasks/{id}/status
+#### GET /api/tasks/{taskId}/script
+
+指定されたタスクIDのスクリプトを取得します。
+
+**パラメータ:**
+- `taskId` (path): タスクID
+
+**レスポンス:**
+```json
+{
+  "success": true,
+  "taskId": "123e4567-e89b-12d3-a456-426614174000",
+  "script": {
+    "content": "#!/bin/bash\necho \"Hello World\"\nread -r name\necho \"Hello, $name!\"",
+    "language": "bash",
+    "filename": "script.sh",
+    "parameters": {
+      "timeout": 300,
+      "workDir": "/work"
+    }
+  }
+}
+```
+
+**使用例:**
+```bash
+curl -X GET "http://keruta-api:8080/api/tasks/task123/script" \
+  -H "Authorization: Bearer $KERUTA_API_TOKEN"
+```
+
+### 2. タスクステータス更新
+
+#### PUT /api/tasks/{taskId}/status
 タスクのステータスを更新します。
 
 **パラメータ:**
-- `id` (path): タスクID
+- `taskId` (path): タスクID
 
 **リクエストボディ:**
 ```json
 {
-  "status": "PROCESSING|COMPLETED|FAILED",
-  "message": "ステータス更新の理由",
+  "status": "PROCESSING|COMPLETED|FAILED|WAITING_FOR_INPUT",
+  "message": "ステータス更新メッセージ",
   "progress": 75,
-  "startedAt": "2024-01-01T10:00:00Z",
-  "completedAt": "2024-01-01T11:00:00Z"
+  "errorCode": "ERROR_CODE",
+  "autoFix": true
 }
 ```
 
 **レスポンス:**
 ```json
 {
-  "id": "task-id",
-  "status": "COMPLETED",
-  "message": "タスクが正常に完了しました",
-  "progress": 100,
-  "updatedAt": "2024-01-01T11:00:00Z"
+  "success": true,
+  "taskId": "123e4567-e89b-12d3-a456-426614174000",
+  "status": "PROCESSING",
+  "updatedAt": "2024-01-01T12:00:00Z"
 }
 ```
 
-### 2. タスク進捗更新
+### 3. タスク進捗更新
 
 #### PATCH /tasks/{id}/progress
 タスクの進捗率を更新します。
@@ -108,23 +141,24 @@ curl -X POST http://keruta-api:8080/api/v1/auth/login \
 }
 ```
 
-### 3. ログ送信
+### 4. ログ送信
 
-#### POST /tasks/{id}/logs
+#### POST /api/tasks/{taskId}/logs
 タスクの実行ログを送信します。
 
 **パラメータ:**
-- `id` (path): タスクID
+- `taskId` (path): タスクID
 
 **リクエストボディ:**
 ```json
 {
-  "level": "INFO",
-  "message": "データベースクエリを実行中...",
-  "timestamp": "2024-01-01T10:00:00Z",
+  "level": "DEBUG|INFO|WARN|ERROR",
+  "message": "ログメッセージ",
+  "timestamp": "2024-01-01T12:00:00Z",
+  "source": "stdout|stderr|agent",
   "metadata": {
-    "source": "keruta-agent",
-    "version": "1.0.0"
+    "lineNumber": 42,
+    "function": "processData"
   }
 }
 ```
@@ -132,15 +166,13 @@ curl -X POST http://keruta-api:8080/api/v1/auth/login \
 **レスポンス:**
 ```json
 {
-  "id": "log-id",
-  "taskId": "task-id",
-  "level": "INFO",
-  "message": "データベースクエリを実行中...",
-  "timestamp": "2024-01-01T10:00:00Z"
+  "success": true,
+  "logId": "log-123",
+  "timestamp": "2024-01-01T12:00:00Z"
 }
 ```
 
-### 4. メトリクス送信
+### 5. メトリクス送信
 
 #### POST /tasks/{id}/metrics
 タスクの実行メトリクスを送信します。
@@ -172,7 +204,7 @@ curl -X POST http://keruta-api:8080/api/v1/auth/login \
 }
 ```
 
-### 5. エラー報告
+### 6. エラー報告
 
 #### POST /tasks/{id}/errors
 タスク実行中のエラーを報告します。
@@ -204,47 +236,92 @@ curl -X POST http://keruta-api:8080/api/v1/auth/login \
 }
 ```
 
-### 6. 自動修正タスク作成
+### 7. 自動修正タスク作成
 
-#### POST /tasks/{id}/auto-fix
+#### POST /api/tasks/{taskId}/auto-fix
 エラー発生時に自動修正タスクを作成します。
 
 **パラメータ:**
-- `id` (path): 元のタスクID
+- `taskId` (path): タスクID
 
 **リクエストボディ:**
 ```json
 {
   "errorCode": "DB_CONNECTION_ERROR",
-  "originalError": "データベース接続に失敗しました",
-  "suggestedFix": "データベース接続設定の確認と修正",
-  "priority": "HIGH"
+  "errorMessage": "データベース接続に失敗しました",
+  "suggestedFix": "データベース設定を確認してください",
+  "priority": "HIGH|MEDIUM|LOW"
 }
 ```
 
 **レスポンス:**
 ```json
 {
-  "id": "auto-fix-task-id",
-  "originalTaskId": "original-task-id",
-  "title": "自動修正: データベース接続エラー",
-  "description": "データベース接続設定の確認と修正",
-  "priority": "HIGH",
-  "status": "QUEUED",
-  "createdAt": "2024-01-01T10:30:00Z"
+  "success": true,
+  "autoFixTaskId": "auto-fix-123",
+  "createdAt": "2024-01-01T12:00:00Z"
 }
 ```
 
-### 7. ヘルスチェック
+### 8. 入力待ち状態管理
 
-#### GET /health
+#### POST /api/tasks/{taskId}/input-waiting
+サブプロセスが入力待ち状態になったことを通知します。
+
+**パラメータ:**
+- `taskId` (path): タスクID
+
+**リクエストボディ:**
+```json
+{
+  "detectedAt": "2024-01-01T12:00:00Z",
+  "processId": 12345,
+  "scriptPath": "/work/script.sh",
+  "lastOutput": "名前を入力してください:"
+}
+```
+
+**レスポンス:**
+```json
+{
+  "success": true,
+  "waitingId": "wait-123",
+  "status": "WAITING_FOR_INPUT"
+}
+```
+
+#### POST /tasks/{id}/resume
+入力待ち状態からタスクを再開します。
+
+**パラメータ:**
+- `id` (path): タスクID
+
+**リクエストボディ:**
+```json
+{
+  "input": "ユーザーが入力したテキスト"
+}
+```
+
+**レスポンス:**
+```json
+{
+  "id": "task-id",
+  "status": "PROCESSING",
+  "updatedAt": "2024-01-01T10:05:00Z"
+}
+```
+
+### 9. ヘルスチェック
+
+#### GET /api/health
 keruta APIサーバーのヘルスチェックを行います。
 
 **レスポンス:**
 ```json
 {
   "status": "UP",
-  "timestamp": "2024-01-01T10:00:00Z",
+  "timestamp": "2024-01-01T12:00:00Z",
   "version": "1.0.0",
   "components": {
     "database": "UP",
@@ -274,11 +351,11 @@ keruta APIサーバーのヘルスチェックを行います。
 {
   "success": false,
   "error": {
-    "code": "TASK_NOT_FOUND",
-    "message": "指定されたタスクが見つかりません",
-    "details": "Task with id 'invalid-id' does not exist"
-  },
-  "timestamp": "2024-01-01T10:00:00Z"
+    "code": "ERROR_CODE",
+    "message": "エラーメッセージ",
+    "details": "詳細情報",
+    "timestamp": "2024-01-01T12:00:00Z"
+  }
 }
 ```
 
@@ -315,128 +392,156 @@ keruta-agentのAPI呼び出しには以下のレート制限が適用されま�
 
 ## サンプルコード
 
-### Go言語での実装例
-```go
-package main
+### 基本的なタスク実行フロー
 
-import (
-    "bytes"
-    "encoding/json"
-    "fmt"
-    "net/http"
-    "os"
-    "time"
-)
+```bash
+#!/bin/bash
 
-type TaskStatus struct {
-    Status      string    `json:"status"`
-    Message     string    `json:"message"`
-    Progress    int       `json:"progress"`
-    StartedAt   time.Time `json:"startedAt"`
-    CompletedAt time.Time `json:"completedAt,omitempty"`
-}
+TASK_ID="task123"
+API_URL="http://keruta-api:8080"
+API_TOKEN="your-api-token"
 
-type APIResponse struct {
-    Success   bool        `json:"success"`
-    Data      interface{} `json:"data"`
-    Message   string      `json:"message"`
-    Timestamp time.Time   `json:"timestamp"`
-}
+# 1. スクリプト取得
+echo "スクリプトを取得中..."
+SCRIPT_RESPONSE=$(curl -s -X GET "$API_URL/api/tasks/$TASK_ID/script" \
+  -H "Authorization: Bearer $API_TOKEN")
 
-func updateTaskStatus(taskID, status, message string, progress int) error {
-    apiURL := os.Getenv("KERUTA_API_URL")
-    token := os.Getenv("KERUTA_API_TOKEN")
-    
-    statusData := TaskStatus{
-        Status:    status,
-        Message:   message,
-        Progress:  progress,
-        StartedAt: time.Now(),
-    }
-    
-    if status == "COMPLETED" || status == "FAILED" {
-        statusData.CompletedAt = time.Now()
-    }
-    
-    jsonData, err := json.Marshal(statusData)
-    if err != nil {
-        return err
-    }
-    
-    req, err := http.NewRequest("PATCH", 
-        fmt.Sprintf("%s/api/v1/tasks/%s/status", apiURL, taskID),
-        bytes.NewBuffer(jsonData))
-    if err != nil {
-        return err
-    }
-    
-    req.Header.Set("Content-Type", "application/json")
-    req.Header.Set("Authorization", "Bearer "+token)
-    
-    client := &http.Client{Timeout: 30 * time.Second}
-    resp, err := client.Do(req)
-    if err != nil {
-        return err
-    }
-    defer resp.Body.Close()
-    
-    if resp.StatusCode != http.StatusOK {
-        return fmt.Errorf("API call failed with status: %d", resp.StatusCode)
-    }
-    
-    return nil
-}
+# レスポンスからスクリプト内容を抽出
+SCRIPT_CONTENT=$(echo "$SCRIPT_RESPONSE" | jq -r '.script.content')
+SCRIPT_FILENAME=$(echo "$SCRIPT_RESPONSE" | jq -r '.script.filename')
 
-func main() {
-    taskID := os.Getenv("KERUTA_TASK_ID")
+# スクリプトファイルを作成
+echo "$SCRIPT_CONTENT" > "/work/$SCRIPT_FILENAME"
+chmod +x "/work/$SCRIPT_FILENAME"
+
+# 2. タスク開始
+echo "タスクを開始中..."
+curl -X PUT "$API_URL/api/tasks/$TASK_ID/status" \
+  -H "Authorization: Bearer $API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "status": "PROCESSING",
+    "message": "タスク実行開始"
+  }'
+
+# 3. スクリプト実行
+echo "スクリプトを実行中..."
+"/work/$SCRIPT_FILENAME"
+
+# 4. タスク完了
+EXIT_CODE=$?
+if [ $EXIT_CODE -eq 0 ]; then
+  echo "タスク完了"
+  curl -X PUT "$API_URL/api/tasks/$TASK_ID/status" \
+    -H "Authorization: Bearer $API_TOKEN" \
+    -H "Content-Type: application/json" \
+    -d '{
+      "status": "COMPLETED",
+      "message": "タスク正常完了"
+    }'
+else
+  echo "タスク失敗"
+  curl -X PUT "$API_URL/api/tasks/$TASK_ID/status" \
+    -H "Authorization: Bearer $API_TOKEN" \
+    -H "Content-Type: application/json" \
+    -d '{
+      "status": "FAILED",
+      "message": "タスク実行中にエラーが発生しました",
+      "errorCode": "SCRIPT_EXECUTION_ERROR"
+    }'
+fi
+```
+
+### keruta-agentを使用した実行
+
+```bash
+# keruta-agentを使用してタスクを実行（スクリプトは自動的にAPIから取得）
+keruta-agent execute --task-id task123
+```
+
+### 入力待ち状態の処理
+
+```bash
+#!/bin/bash
+
+TASK_ID="task123"
+API_URL="http://keruta-api:8080"
+API_TOKEN="your-api-token"
+
+# スクリプト取得
+SCRIPT_RESPONSE=$(curl -s -X GET "$API_URL/api/tasks/$TASK_ID/script" \
+  -H "Authorization: Bearer $API_TOKEN")
+
+SCRIPT_CONTENT=$(echo "$SCRIPT_RESPONSE" | jq -r '.script.content')
+echo "$SCRIPT_CONTENT" > "/work/script.sh"
+chmod +x "/work/script.sh"
+
+# タスク開始
+curl -X PUT "$API_URL/api/tasks/$TASK_ID/status" \
+  -H "Authorization: Bearer $API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"status": "PROCESSING", "message": "タスク実行開始"}'
+
+# スクリプト実行（入力待ち状態を監視）
+while true; do
+  # スクリプトの実行状態をチェック
+  WAITING_RESPONSE=$(curl -s -X GET "$API_URL/api/tasks/$TASK_ID/input-waiting" \
+    -H "Authorization: Bearer $API_TOKEN")
+  
+  IS_WAITING=$(echo "$WAITING_RESPONSE" | jq -r '.waiting.isWaiting')
+  
+  if [ "$IS_WAITING" = "true" ]; then
+    echo "入力待ち状態を検出"
     
-    // タスク開始
-    err := updateTaskStatus(taskID, "PROCESSING", "タスクを開始します", 0)
-    if err != nil {
-        fmt.Printf("Error starting task: %v\n", err)
-        os.Exit(1)
-    }
+    # タスク状態を入力待ちに更新
+    curl -X PUT "$API_URL/api/tasks/$TASK_ID/status" \
+      -H "Authorization: Bearer $API_TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{"status": "WAITING_FOR_INPUT", "message": "ユーザー入力を待機中"}'
     
-    // 処理実行
-    // ... 実際の処理 ...
-    
-    // タスク完了
-    err = updateTaskStatus(taskID, "COMPLETED", "タスクが完了しました", 100)
-    if err != nil {
-        fmt.Printf("Error completing task: %v\n", err)
-        os.Exit(1)
-    }
+    # 管理パネルからの入力を待機
+    sleep 5
+  else
+    # スクリプトが完了したかチェック
+    if ! pgrep -f "script.sh" > /dev/null; then
+      break
+    fi
+    sleep 1
+  fi
+done
+
+# タスク完了
+curl -X PUT "$API_URL/api/tasks/$TASK_ID/status" \
+  -H "Authorization: Bearer $API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"status": "COMPLETED", "message": "タスク正常完了"}'
+```
+
+## データモデル
+
+### Script
+```json
+{
+  "content": "string",
+  "language": "bash|python|node|go",
+  "filename": "string",
+  "parameters": {
+    "timeout": "number",
+    "workDir": "string",
+    "env": "object"
+  }
 }
 ```
 
-### curlコマンドでの使用例
-```bash
-# タスク開始
-curl -X PATCH "http://keruta-api:8080/api/v1/tasks/$KERUTA_TASK_ID/status" \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $KERUTA_API_TOKEN" \
-  -d '{
-    "status": "PROCESSING",
-    "message": "タスクを開始します",
-    "progress": 0
-  }'
-
-# 進捗更新
-curl -X PATCH "http://keruta-api:8080/api/v1/tasks/$KERUTA_TASK_ID/progress" \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $KERUTA_API_TOKEN" \
-  -d '{
-    "progress": 50,
-    "message": "データ処理中..."
-  }'
-
-# タスク完了
-curl -X PATCH "http://keruta-api:8080/api/v1/tasks/$KERUTA_TASK_ID/status" \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $KERUTA_API_TOKEN" \
-  -d '{
-    "status": "COMPLETED",
-    "message": "タスクが完了しました",
-    "progress": 100
-  }'
+### TaskStatus
+```json
+{
+  "status": "PROCESSING|COMPLETED|FAILED|WAITING_FOR_INPUT",
+  "message": "string",
+  "progress": "number",
+  "errorCode": "string",
+  "autoFix": "boolean",
+  "startedAt": "ISO 8601 date",
+  "completedAt": "ISO 8601 date"
+}
 ``` 
