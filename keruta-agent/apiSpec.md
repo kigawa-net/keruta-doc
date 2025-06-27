@@ -11,7 +11,7 @@
 - [レート制限](#レート制限)
 - [サンプルコード](#サンプルコード)
 - [データモデル](#データモデル)
-- [データモデル](#データモデル)
+- [WebSocket通信](#websocket通信)
 
 ## 概要
 keruta-agentは、keruta APIサーバーとRESTful APIを通じて通信します。すべてのAPI呼び出しはHTTPSで行われ、JWTトークンによる認証が必要です。
@@ -543,5 +543,94 @@ curl -X PUT "$API_URL/api/tasks/$TASK_ID/status" \
   "autoFix": "boolean",
   "startedAt": "ISO 8601 date",
   "completedAt": "ISO 8601 date"
+}
+```
+
+## WebSocket通信
+
+keruta-agentはkeruta APIとWebSocketで接続し、以下のリアルタイム連携を行います：
+- タスク状態の即時更新
+- 標準入力のリアルタイム送信
+- ログのリアルタイム送信
+- 管理パネルからの入力受付
+
+### WebSocketエンドポイント
+- ws(s)://<keruta-api-host>/ws/agent
+
+#### 認証
+- WebSocket接続時にAPIトークンをクエリパラメータまたはヘッダーで送信
+  例: `wss://keruta-api:8080/ws/agent?token=YOUR_API_TOKEN`
+
+### メッセージ例
+#### agent→API（タスク状態更新）
+```json
+{
+  "type": "status",
+  "taskId": "123e4567-e89b-12d3-a456-426614174000",
+  "status": "WAITING_FOR_INPUT",
+  "message": "ユーザー入力待ち"
+}
+```
+#### API→agent（標準入力送信）
+```json
+{
+  "type": "input",
+  "taskId": "123e4567-e89b-12d3-a456-426614174000",
+  "input": "田中太郎"
+}
+```
+
+## データモデル
+
+### WebSocketMessage
+```json
+{
+  "type": "status|input|log|ping|pong",
+  "taskId": "string",
+  "status": "PROCESSING|COMPLETED|FAILED|WAITING_FOR_INPUT",
+  "message": "string",
+  "input": "string",
+  "log": {
+    "level": "INFO|ERROR|DEBUG|WARN",
+    "message": "string"
+  }
+}
+```
+
+## サンプルコード
+
+### WebSocketでの接続例（Go）
+```go
+import (
+  "github.com/gorilla/websocket"
+  "log"
+)
+
+func main() {
+  url := "wss://keruta-api:8080/ws/agent?token=YOUR_API_TOKEN"
+  conn, _, err := websocket.DefaultDialer.Dial(url, nil)
+  if err != nil {
+    log.Fatal("接続失敗:", err)
+  }
+  defer conn.Close()
+
+  // タスク状態を送信
+  msg := map[string]interface{}{
+    "type": "status",
+    "taskId": "task123",
+    "status": "WAITING_FOR_INPUT",
+    "message": "ユーザー入力待ち",
+  }
+  conn.WriteJSON(msg)
+
+  // メッセージ受信ループ
+  for {
+    var resp map[string]interface{}
+    if err := conn.ReadJSON(&resp); err != nil {
+      log.Println("受信エラー:", err)
+      break
+    }
+    log.Println("受信:", resp)
+  }
 }
 ``` 
