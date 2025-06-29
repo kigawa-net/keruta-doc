@@ -3,202 +3,101 @@
 > kerutaシステムの主要APIエンドポイントとリクエスト/レスポンス例
 
 ## 目次
-- [タスク管理API](#タスク管理api)
-- [エージェント管理API](#エージェント管理api)
-- [リポジトリ管理API](#リポジトリ管理api)
-- [ドキュメント管理API](#ドキュメント管理api)
+- [タスク管理API](./api/taskApi.md)
+- [エージェント管理API](./api/agentApi.md)
+- [リポジトリ管理API](./api/repositoryApi.md)
+- [ドキュメント管理API](./api/documentApi.md)
+- [共通仕様](#共通仕様)
 - [関連ドキュメント](#関連ドキュメント)
 
 ---
 
-## タスク管理API
+## 共通仕様
 
-### タスク一覧取得
+### 基本URL
+```
+https://api.keruta.example.com
+```
+
+### 認証
+すべてのAPIリクエストには認証が必要です。
+
 ```http
-GET /api/v1/tasks
+Authorization: Bearer <access_token>
+```
 
-Response:
-[
-  {
-    "id": "task-123",
-    "title": "ログイン機能の実装",
-    "description": "基本的な認証機能を実装してください",
-    "priority": 1,
-    "status": "PENDING",
-    "documents": [],
-    "image": null,
-    "namespace": "default",
-    "jobName": null,
-    "podName": null,
-    "additionalEnv": {},
-    "kubernetesManifest": null,
-    "logs": null,
-    "agentId": null,
-    "repositoryId": null,
-    "parentId": null,
-    "createdAt": "2024-06-18T10:00:00Z",
-    "updatedAt": "2024-06-18T10:00:00Z"
+### レスポンス形式
+すべてのAPIレスポンスは以下の形式で返されます：
+
+#### 成功レスポンス
+```json
+{
+  "data": {
+    // レスポンスデータ
+  },
+  "meta": {
+    "timestamp": "2024-06-18T10:00:00Z",
+    "version": "1.0.0"
   }
-]
-```
-
-### タスク作成
-```http
-POST /api/v1/tasks
-Content-Type: application/json
-
-{
-  "title": "ログイン機能の実装",
-  "description": "基本的な認証機能を実装してください",
-  "priority": 1
-}
-
-Response: 201 Created
-{
-  "id": "task-123",
-  ...
 }
 ```
 
-### タスク詳細取得
-```http
-GET /api/v1/tasks/{id}
-
-Response:
+#### エラーレスポンス
+```json
 {
-  "id": "task-123",
-  "title": "ログイン機能の実装",
-  ...
-}
-```
-
-### タスク削除
-```http
-DELETE /api/v1/tasks/{id}
-
-Response: 204 No Content
-```
-
----
-
-## エージェント管理API
-
-### エージェント一覧取得
-```http
-GET /api/v1/agents
-
-Response:
-[
-  {
-    "id": "agent-001",
-    "name": "KotlinAgent",
-    "languages": ["kotlin"],
-    "status": "AVAILABLE",
-    "currentTaskId": null,
-    "installCommand": "",
-    "executeCommand": "",
-    "createdAt": "2024-06-18T10:00:00Z",
-    "updatedAt": "2024-06-18T10:00:00Z"
+  "error": {
+    "code": "ERROR_CODE",
+    "message": "エラーメッセージ",
+    "details": {}
+  },
+  "meta": {
+    "timestamp": "2024-06-18T10:00:00Z",
+    "version": "1.0.0"
   }
-]
-```
-
-### エージェント作成
-```http
-POST /api/v1/agents
-Content-Type: application/json
-
-{
-  "name": "KotlinAgent",
-  "languages": ["kotlin"]
-}
-
-Response: 201 Created
-{
-  "id": "agent-001",
-  ...
 }
 ```
 
----
+### HTTPステータスコード
+| コード | 説明 |
+|--------|------|
+| 200 | OK - リクエスト成功 |
+| 201 | Created - リソース作成成功 |
+| 204 | No Content - 削除成功 |
+| 400 | Bad Request - リクエスト不正 |
+| 401 | Unauthorized - 認証失敗 |
+| 403 | Forbidden - 権限不足 |
+| 404 | Not Found - リソース不存在 |
+| 409 | Conflict - 競合状態 |
+| 422 | Unprocessable Entity - 処理不可能 |
+| 500 | Internal Server Error - サーバーエラー |
 
-## リポジトリ管理API
+### ページネーション
+リスト取得APIでは、ページネーションがサポートされています。
 
-### リポジトリ一覧取得
-```http
-GET /api/v1/repositories
+#### クエリパラメータ
+| パラメータ | 型 | デフォルト | 説明 |
+|-----------|----|-----------|------|
+| page | integer | 1 | ページ番号 |
+| per_page | integer | 20 | 1ページあたりの件数 |
+| sort | string | created_at | ソート項目 |
+| order | string | desc | ソート順序（asc/desc） |
 
-Response:
-[
-  {
-    "id": "repo-001",
-    "name": "keruta-app",
-    "url": "https://github.com/user/keruta.git",
-    "description": "keruta本体リポジトリ",
-    "isValid": true,
-    "setupScript": "",
-    "usePvc": false,
-    "pvcStorageSize": "1Gi",
-    "pvcAccessMode": "ReadWriteOnce",
-    "createdAt": "2024-06-18T10:00:00Z",
-    "updatedAt": "2024-06-18T10:00:00Z"
+#### レスポンス例
+```json
+{
+  "data": [
+    // データ配列
+  ],
+  "meta": {
+    "pagination": {
+      "page": 1,
+      "per_page": 20,
+      "total": 100,
+      "total_pages": 5
+    },
+    "timestamp": "2024-06-18T10:00:00Z",
+    "version": "1.0.0"
   }
-]
-```
-
-### リポジトリ作成
-```http
-POST /api/v1/repositories
-Content-Type: application/json
-
-{
-  "name": "keruta-app",
-  "url": "https://github.com/user/keruta.git"
-}
-
-Response: 201 Created
-{
-  "id": "repo-001",
-  ...
-}
-```
-
----
-
-## ドキュメント管理API
-
-### ドキュメント一覧取得
-```http
-GET /api/v1/documents
-
-Response:
-[
-  {
-    "id": "doc-001",
-    "title": "システム概要",
-    "content": "...",
-    "tags": ["概要"],
-    "createdAt": "2024-06-18T10:00:00Z",
-    "updatedAt": "2024-06-18T10:00:00Z"
-  }
-]
-```
-
-### ドキュメント作成
-```http
-POST /api/v1/documents
-Content-Type: application/json
-
-{
-  "title": "システム概要",
-  "content": "...",
-  "tags": ["概要"]
-}
-
-Response: 201 Created
-{
-  "id": "doc-001",
-  ...
 }
 ```
 
@@ -206,4 +105,8 @@ Response: 201 Created
 
 ## 関連ドキュメント
 - [システム詳細・セットアップ](./projectDetails.md)
-- [データモデル定義](./dataModel.md) 
+- [データモデル定義](./dataModel.md)
+- [タスク管理API詳細](./api/taskApi.md)
+- [エージェント管理API詳細](./api/agentApi.md)
+- [リポジトリ管理API詳細](./api/repositoryApi.md)
+- [ドキュメント管理API詳細](./api/documentApi.md) 
