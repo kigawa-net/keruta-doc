@@ -1,30 +1,30 @@
-# エージェント管理API
+# エージェント管理API仕様
 
-> kerutaシステムのエージェント管理に関するAPIエンドポイントとリクエスト/レスポンス例
+kerutaシステムのエージェント管理に関するAPIエンドポイントとリクエスト/レスポンス例をまとめます。
 
-## 目次
-- [エージェント一覧取得](#エージェント一覧取得)
-- [エージェント作成](#エージェント作成)
-- [エージェント詳細取得](#エージェント詳細取得)
-- [エージェント更新](#エージェント更新)
-- [エージェント削除](#エージェント削除)
+## エンドポイント一覧
+- エージェント一覧取得
+- エージェント作成
+- エージェント詳細取得
+- エージェント更新
+- エージェント削除
 
 ---
 
-## エージェント一覧取得
+### エージェント一覧取得
 
-### エンドポイント
+#### エンドポイント
 ```http
 GET /api/v1/agents
 ```
 
-### クエリパラメータ
+#### クエリパラメータ
 | パラメータ | 型 | 必須 | 説明 |
 |-----------|----|------|------|
 | status | string | 任意 | エージェントのステータスでフィルタリング |
 | language | string | 任意 | 対応言語でフィルタリング |
 
-### レスポンス例
+#### レスポンス例
 ```json
 [
   {
@@ -43,15 +43,15 @@ GET /api/v1/agents
 
 ---
 
-## エージェント作成
+### エージェント作成
 
-### エンドポイント
+#### エンドポイント
 ```http
 POST /api/v1/agents
 Content-Type: application/json
 ```
 
-### リクエストボディ
+#### リクエストボディ
 ```json
 {
   "name": "KotlinAgent",
@@ -61,7 +61,7 @@ Content-Type: application/json
 }
 ```
 
-### レスポンス例
+#### レスポンス例
 ```json
 {
   "id": "agent-001",
@@ -78,19 +78,19 @@ Content-Type: application/json
 
 ---
 
-## エージェント詳細取得
+### エージェント詳細取得
 
-### エンドポイント
+#### エンドポイント
 ```http
 GET /api/v1/agents/{id}
 ```
 
-### パスパラメータ
+#### パスパラメータ
 | パラメータ | 型 | 必須 | 説明 |
 |-----------|----|------|------|
 | id | string | 必須 | エージェントID |
 
-### レスポンス例
+#### レスポンス例
 ```json
 {
   "id": "agent-001",
@@ -107,20 +107,20 @@ GET /api/v1/agents/{id}
 
 ---
 
-## エージェント更新
+### エージェント更新
 
-### エンドポイント
+#### エンドポイント
 ```http
 PUT /api/v1/agents/{id}
 Content-Type: application/json
 ```
 
-### パスパラメータ
+#### パスパラメータ
 | パラメータ | 型 | 必須 | 説明 |
 |-----------|----|------|------|
 | id | string | 必須 | エージェントID |
 
-### リクエストボディ
+#### リクエストボディ
 ```json
 {
   "name": "UpdatedKotlinAgent",
@@ -130,7 +130,7 @@ Content-Type: application/json
 }
 ```
 
-### レスポンス例
+#### レスポンス例
 ```json
 {
   "id": "agent-001",
@@ -147,55 +147,19 @@ Content-Type: application/json
 
 ---
 
-## エージェント削除
+### エージェント削除
 
-### エンドポイント
+#### エンドポイント
 ```http
 DELETE /api/v1/agents/{id}
 ```
 
-### パスパラメータ
+#### パスパラメータ
 | パラメータ | 型 | 必須 | 説明 |
 |-----------|----|------|------|
 | id | string | 必須 | エージェントID |
 
-### レスポンス
+#### レスポンス
 ```http
 204 No Content
-```
-
----
-
-## エラーレスポンス
-
-### 400 Bad Request
-```json
-{
-  "error": "Invalid request parameters",
-  "message": "Name is required"
-}
-```
-
-### 404 Not Found
-```json
-{
-  "error": "Agent not found",
-  "message": "Agent with id 'agent-001' does not exist"
-}
-```
-
-### 409 Conflict
-```json
-{
-  "error": "Agent in use",
-  "message": "Agent is currently executing a task"
-}
-```
-
-### 500 Internal Server Error
-```json
-{
-  "error": "Internal server error",
-  "message": "An unexpected error occurred"
-}
 ``` 

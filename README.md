@@ -67,10 +67,16 @@
   - プロジェクト詳細
 - [systemOverview.md](keruta/system/systemOverview.md)
   - システム概要
-- [apiSpec.md](keruta/system/apiSpec.md)
-  - API仕様
 - [dataModel.md](keruta/system/dataModel.md)
   - データモデル
+- [taskApi.md](keruta/system/api/taskApi.md)
+  - タスク管理API
+- [agentApi.md](keruta/system/api/agentApi.md)
+  - エージェント管理API
+- [repositoryApi.md](keruta/system/api/repositoryApi.md)
+  - リポジトリ管理API
+- [documentApi.md](keruta/system/api/documentApi.md)
+  - ドキュメント管理API
 
 #### task
 - [taskQueueSystemDesign.md](keruta/task/taskQueueSystemDesign.md)
@@ -78,14 +84,16 @@
 - [autoFixTask.md](keruta/task/autoFixTask.md)
   - 自動修正タスク
 
+#### common
+- [apiSpec.md](common/apiSpec.md)
+  - 共通API仕様・keruta API仕様
+
 ### keruta-agent
 
 - [README.md](keruta-agent/README.md)
   - keruta-agentの概要
 - [commandReference.md](keruta-agent/commandReference.md)
   - コマンドリファレンス
-- [apiSpec.md](keruta-agent/apiSpec.md)
-  - API仕様
 - [implementation.md](keruta-agent/implementation.md)
   - 実装例
 

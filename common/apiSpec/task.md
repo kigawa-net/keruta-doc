@@ -1,25 +1,25 @@
-# タスク管理API
+# タスク管理API仕様
 
-> kerutaシステムのタスク管理に関するAPIエンドポイントとリクエスト/レスポンス例
+kerutaシステムのタスク管理に関するAPIエンドポイントとリクエスト/レスポンス例をまとめます。
 
-## 目次
-- [タスク一覧取得](#タスク一覧取得)
-- [タスク作成](#タスク作成)
-- [タスク詳細取得](#タスク詳細取得)
-- [タスク削除](#タスク削除)
-- [タスクスクリプト取得](#タスクスクリプト取得)
-- [タスクスクリプト更新](#タスクスクリプト更新)
+## エンドポイント一覧
+- タスク一覧取得
+- タスク作成
+- タスク詳細取得
+- タスク削除
+- タスクスクリプト取得
+- タスクスクリプト更新
 
 ---
 
-## タスク一覧取得
+### タスク一覧取得
 
-### エンドポイント
+#### エンドポイント
 ```http
 GET /api/v1/tasks
 ```
 
-### クエリパラメータ
+#### クエリパラメータ
 | パラメータ | 型 | 必須 | 説明 |
 |-----------|----|------|------|
 | status | string | 任意 | タスクのステータスでフィルタリング |
@@ -27,7 +27,7 @@ GET /api/v1/tasks
 | agentId | string | 任意 | エージェントIDでフィルタリング |
 | repositoryId | string | 任意 | リポジトリIDでフィルタリング |
 
-### レスポンス例
+#### レスポンス例
 ```json
 [
   {
@@ -55,15 +55,15 @@ GET /api/v1/tasks
 
 ---
 
-## タスク作成
+### タスク作成
 
-### エンドポイント
+#### エンドポイント
 ```http
 POST /api/v1/tasks
 Content-Type: application/json
 ```
 
-### リクエストボディ
+#### リクエストボディ
 ```json
 {
   "title": "ログイン機能の実装",
@@ -77,7 +77,7 @@ Content-Type: application/json
 }
 ```
 
-### レスポンス例
+#### レスポンス例
 ```json
 {
   "id": "task-123",
@@ -105,19 +105,19 @@ Content-Type: application/json
 
 ---
 
-## タスク詳細取得
+### タスク詳細取得
 
-### エンドポイント
+#### エンドポイント
 ```http
 GET /api/v1/tasks/{id}
 ```
 
-### パスパラメータ
+#### パスパラメータ
 | パラメータ | 型 | 必須 | 説明 |
 |-----------|----|------|------|
 | id | string | 必須 | タスクID |
 
-### レスポンス例
+#### レスポンス例
 ```json
 {
   "id": "task-123",
@@ -143,38 +143,38 @@ GET /api/v1/tasks/{id}
 
 ---
 
-## タスク削除
+### タスク削除
 
-### エンドポイント
+#### エンドポイント
 ```http
 DELETE /api/v1/tasks/{id}
 ```
 
-### パスパラメータ
+#### パスパラメータ
 | パラメータ | 型 | 必須 | 説明 |
 |-----------|----|------|------|
 | id | string | 必須 | タスクID |
 
-### レスポンス
+#### レスポンス
 ```http
 204 No Content
 ```
 
 ---
 
-## タスクスクリプト取得
+### タスクスクリプト取得
 
-### エンドポイント
+#### エンドポイント
 ```http
 GET /api/v1/tasks/{id}/script
 ```
 
-### パスパラメータ
+#### パスパラメータ
 | パラメータ | 型 | 必須 | 説明 |
 |-----------|----|------|------|
 | id | string | 必須 | タスクID |
 
-### レスポンス例
+#### レスポンス例
 ```json
 {
   "taskId": "task-123",
@@ -195,20 +195,20 @@ GET /api/v1/tasks/{id}/script
 
 ---
 
-## タスクスクリプト更新
+### タスクスクリプト更新
 
-### エンドポイント
+#### エンドポイント
 ```http
 PUT /api/v1/tasks/{id}/script
 Content-Type: application/json
 ```
 
-### パスパラメータ
+#### パスパラメータ
 | パラメータ | 型 | 必須 | 説明 |
 |-----------|----|------|------|
 | id | string | 必須 | タスクID |
 
-### リクエストボディ
+#### リクエストボディ
 ```json
 {
   "installScript": "#!/bin/bash\necho 'Updated install script...'",
@@ -217,7 +217,7 @@ Content-Type: application/json
 }
 ```
 
-### レスポンス例
+#### レスポンス例
 ```json
 {
   "taskId": "task-123",
@@ -232,33 +232,5 @@ Content-Type: application/json
     "WORKSPACE_PATH": "/workspace"
   },
   "updatedAt": "2024-06-18T10:00:00Z"
-}
-```
-
----
-
-## エラーレスポンス
-
-### 400 Bad Request
-```json
-{
-  "error": "Invalid request parameters",
-  "message": "Title is required"
-}
-```
-
-### 404 Not Found
-```json
-{
-  "error": "Task not found",
-  "message": "Task with id 'task-123' does not exist"
-}
-```
-
-### 500 Internal Server Error
-```json
-{
-  "error": "Internal server error",
-  "message": "An unexpected error occurred"
 }
 ``` 
