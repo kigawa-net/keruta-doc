@@ -159,7 +159,7 @@ https://api.keruta.example.com
 
 ### ベースURL
 ```
-http://keruta-api:8080/api/v1
+http://keruta-api:8080
 ```
 
 ### 共通ヘッダー

@@ -4,7 +4,7 @@ keruta-agentがkeruta APIサーバーと通信する際のAPI仕様をまとめ�
 
 ## ベースURL
 ```
-http://keruta-api:8080/api/v1
+http://keruta-api:8080
 ```
 
 ## 共通ヘッダー
@@ -38,10 +38,10 @@ curl -X POST http://keruta-api:8080/api/v1/auth/login \
 
 ## エンドポイント一覧
 
-1. スクリプト取得: `GET /api/tasks/{taskId}/script`
-2. タスクステータス更新: `PUT /api/tasks/{taskId}/status`
-3. タスク進捗更新: `PATCH /tasks/{id}/progress`
-4. ログ送信: `POST /api/tasks/{taskId}/logs`
-5. メトリクス送信: `POST /tasks/{id}/metrics`
+1. スクリプト取得: `GET /api/v1/tasks/{taskId}/script`
+2. タスクステータス更新: `PUT /api/v1/tasks/{taskId}/status`
+3. タスク進捗更新: `PATCH /api/v1/tasks/{id}/progress`
+4. ログ送信: `POST /api/v1/tasks/{taskId}/logs`
+5. メトリクス送信: `POST /api/v1/tasks/{id}/metrics`
 
 （詳細なリクエスト・レスポンス例は、必要に応じて追記してください） 
