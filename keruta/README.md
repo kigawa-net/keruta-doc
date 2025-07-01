@@ -68,4 +68,7 @@
 
 ---
 
+keruta管理パネル機能は新モジュール「keruta-admin」として分離されました。
+→ [keruta-admin/README.md](../keruta-admin/README.md)
+
 各ドキュメントの詳細はリンク先をご参照ください。
