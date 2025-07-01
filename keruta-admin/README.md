@@ -5,6 +5,8 @@
 ## 管理パネル関連ドキュメント
 - [adminPanel.md](./adminPanel.md)  
   管理パネルの機能・画面・操作方法
+- [adminPanelRemix.md](./adminPanelRemix.md)  
+  Remix.jsを使った管理パネルの実装
 - [adminPanelScriptGenerator.md](./adminPanelScriptGenerator.md)  
   インストールスクリプト作成機能
 - [repositoryManagement.md](./repositoryManagement.md)  
