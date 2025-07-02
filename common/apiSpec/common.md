@@ -1,6 +1,15 @@
 # API共通仕様
 
-このドキュメントでは、kerutaプロジェクトにおける各サブシステムで共通して利用されるAPI設計方針や認証・認可、エラーハンドリング、レスポンス形式、バージョニング等の共通仕様についてまとめます。
+## 目次
+- API設計方針
+- 認証・認可
+- エラーハンドリング
+- 共通レスポンス形式
+- バージョニング
+- CORS（クロスオリジンリソースシェアリング）
+- その他共通事項
+
+---
 
 ## API設計方針
 - RESTful設計を基本とする。
@@ -136,34 +145,12 @@ Content-Type: application/json
 ## バージョニング
 - URLパスにバージョン番号を含める（例: `/api/v1/resource`）。
 
-## CORS (Cross-Origin Resource Sharing)
-- すべてのAPIエンドポイントはCORSに対応しています。
-- 以下のCORSヘッダーが設定されています：
-
-### 許可されるオリジン
-- 開発環境: `http://localhost:3000`, `http://localhost:8000`
-- 本番環境: `https://*.keruta.example.com`
-
-### 許可されるメソッド
-- `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `OPTIONS`
-
-### 許可されるヘッダー
-- `Content-Type`, `Authorization`, `X-Requested-With`, `Accept`, `Origin`, `X-CSRF-Token`
-
-### 認証情報
-- `Access-Control-Allow-Credentials: true`
-
-### プリフライトリクエストのキャッシュ時間
-- `Access-Control-Max-Age: 86400` (24時間)
-
-### サンプルレスポンスヘッダー
-```http
-Access-Control-Allow-Origin: https://admin.keruta.example.com
-Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS
-Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, Accept, Origin, X-CSRF-Token
-Access-Control-Allow-Credentials: true
-Access-Control-Max-Age: 86400
-```
+## CORS（クロスオリジンリソースシェアリング）
+- 許可オリジン: `*`（全て許可、または必要に応じて限定）
+- 許可メソッド: `GET, POST, PUT, PATCH, DELETE, OPTIONS`
+- 許可ヘッダー: `Content-Type, Authorization`
+- 認証情報送信: 必要に応じて `Access-Control-Allow-Credentials: true`
+- プリフライトリクエスト（OPTIONS）に対応
 
 ## その他共通事項
 - タイムゾーンはJST（日本標準時）を基準とする。
