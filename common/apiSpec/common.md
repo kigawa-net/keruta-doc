@@ -136,6 +136,35 @@ Content-Type: application/json
 ## バージョニング
 - URLパスにバージョン番号を含める（例: `/api/v1/resource`）。
 
+## CORS (Cross-Origin Resource Sharing)
+- すべてのAPIエンドポイントはCORSに対応しています。
+- 以下のCORSヘッダーが設定されています：
+
+### 許可されるオリジン
+- 開発環境: `http://localhost:3000`, `http://localhost:8000`
+- 本番環境: `https://*.keruta.example.com`
+
+### 許可されるメソッド
+- `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `OPTIONS`
+
+### 許可されるヘッダー
+- `Content-Type`, `Authorization`, `X-Requested-With`, `Accept`, `Origin`, `X-CSRF-Token`
+
+### 認証情報
+- `Access-Control-Allow-Credentials: true`
+
+### プリフライトリクエストのキャッシュ時間
+- `Access-Control-Max-Age: 86400` (24時間)
+
+### サンプルレスポンスヘッダー
+```http
+Access-Control-Allow-Origin: https://admin.keruta.example.com
+Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS
+Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, Accept, Origin, X-CSRF-Token
+Access-Control-Allow-Credentials: true
+Access-Control-Max-Age: 86400
+```
+
 ## その他共通事項
 - タイムゾーンはJST（日本標準時）を基準とする。
 - 日時はISO 8601形式（例: `2024-06-01T12:00:00+09:00`）で返却。 
