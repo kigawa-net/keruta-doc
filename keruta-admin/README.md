@@ -11,6 +11,8 @@
   インストールスクリプト作成機能
 - [repositoryManagement.md](./repositoryManagement.md)  
   リポジトリ管理機能
+- [backendConfiguration.md](./backendConfiguration.md)  
+  環境変数を使用したバックエンド設定
 
 ---
 
