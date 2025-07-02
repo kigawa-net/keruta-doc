@@ -9,6 +9,7 @@
 ## 認証・認可
 - JWTベースの認証を推奨。
 - 必要に応じてOAuth2やAPIキーも利用可能。
+- Keycloakによる認証もサポート。
 - すべてのAPIリクエストには認証が必要です。
 
 ### 認証方式
@@ -16,6 +17,7 @@
 - 認証トークンはHTTPリクエストヘッダー `Authorization: Bearer <access_token>` で送信する。
 - トークンの有効期限切れ時は401 Unauthorizedを返す。
 - 必要に応じてOAuth2やAPIキー認証もサポート可能。
+- Keycloakによる認証も利用可能（OpenID Connect/OAuth2準拠）。
 
 ### トークン取得・リフレッシュ
 - 認証API（例: `/api/v1/auth/login`）でユーザー名・パスワードを送信し、JWTトークンとリフレッシュトークンを取得。
@@ -25,6 +27,28 @@
 1. ログインAPIでJWTトークン取得
 2. 取得したトークンを全APIリクエストのヘッダーに付与
 3. トークン期限切れ時はリフレッシュAPIで再取得
+
+### Keycloak認証
+Keycloakを使用した認証も利用可能です。Keycloakは、OpenID Connect/OAuth2準拠の認証・認可サーバーです。
+
+#### Keycloak設定
+- Keycloak URL: KeycloakサーバーのベースURL
+- Realm: 認証に使用するKeycloakレルム
+- Client ID: アプリケーションのクライアントID
+
+#### Keycloak認証フロー
+1. ユーザーがアプリケーションにアクセス
+2. アプリケーションがKeycloakにリダイレクト
+3. ユーザーがKeycloakでログイン
+4. Keycloakがアプリケーションにリダイレクト（認証トークン付き）
+5. アプリケーションがトークンを使用してAPIリクエストを行う
+6. トークン期限切れ時は自動的にリフレッシュ
+
+#### Keycloak認証の利点
+- シングルサインオン（SSO）対応
+- 多要素認証（MFA）対応
+- ソーシャルログイン対応
+- 詳細な権限管理
 
 ### サンプルリクエスト・レスポンス
 ```http
