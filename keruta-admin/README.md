@@ -18,23 +18,15 @@
 
 各ドキュメントの詳細はリンク先をご参照ください。 
 
-## keruta本体と同じSecretを利用したAPIアクセス
+## keruta本体と同じSecretを利用したJWT署名
 
-keruta-adminや他のサービスがkeruta本体APIにアクセスする際は、keruta本体と同じKubernetes Secretに格納されたトークンを利用できます。
+keruta-adminがkeruta本体APIにアクセスする際は、keruta本体と同じKubernetes Secretに格納されたsecretを利用できます。このsecretはJWT署名の検証に使用されます。
 
 ### 運用例
-- Kubernetes Secret（例: `keruta-secrets` や `keruta-api-token`）にAPIトークンを格納し、Podの環境変数として注入します。
+- Kubernetes Secret（例: `keruta-secrets`）にsecretを格納し、Podの環境変数として注入します。
 - これにより、keruta本体と同じ認証情報でAPIアクセスが可能です。
+- JWT署名の検証に同じsecretが使用されます。
 
-#### Kubernetesマニフェスト例
-```yaml
-env:
-  - name: AUTH_TOKEN
-    valueFrom:
-      secretKeyRef:
-        name: keruta-secrets  # keruta本体と同じSecret名
-        key: auth-token       # トークンのキー名
-```
 
 #### 備考
 - Secretの作成・管理、Podへの注入方法はKubernetesの標準的な方法に従ってください。
