@@ -14,7 +14,9 @@ keruta管理パネルは、環境変数を使用してバックエンドAPIの�
 |----------|------|------------|
 | `BACKEND_URL` | バックエンドAPIのベースURL | `http://localhost:3001/api` |
 | `API_VERSION` | APIバージョン | `v1` |
-| `AUTH_TOKEN` | 認証トークン（オプション） | なし |
+| `JWT_SECRET` | JWT トークン生成用の秘密鍵 | なし |
+| `AUTH_TOKEN` | 認証トークン（JWT_SECRETが設定されていない場合に使用） | なし |
+
 
 ### 環境変数の設定方法
 
@@ -25,6 +27,7 @@ keruta管理パネルは、環境変数を使用してバックエンドAPIの�
    # .envファイルの例
    BACKEND_URL=https://api.example.com
    API_VERSION=v2
+   JWT_SECRET=your-jwt-secret-key
    AUTH_TOKEN=your-auth-token
    ```
 
@@ -33,11 +36,13 @@ keruta管理パネルは、環境変数を使用してバックエンドAPIの�
    # Linuxの場合
    export BACKEND_URL=https://api.example.com
    export API_VERSION=v2
+   export JWT_SECRET=your-jwt-secret-key
    export AUTH_TOKEN=your-auth-token
-   
+
    # Windowsの場合
    set BACKEND_URL=https://api.example.com
    set API_VERSION=v2
+   set JWT_SECRET=your-jwt-secret-key
    set AUTH_TOKEN=your-auth-token
    ```
 
@@ -50,8 +55,9 @@ keruta管理パネルは、環境変数を使用してバックエンドAPIの�
        environment:
          - BACKEND_URL=https://api.example.com
          - API_VERSION=v2
+         - JWT_SECRET=your-jwt-secret-key
          - AUTH_TOKEN=your-auth-token
-   
+
    # Kubernetesの例（deployment.yaml）
    spec:
      containers:
@@ -62,11 +68,9 @@ keruta管理パネルは、環境変数を使用してバックエンドAPIの�
          value: "https://api.example.com"
        - name: API_VERSION
          value: "v2"
-       - name: AUTH_TOKEN
-         valueFrom:
-           secretKeyRef:
-             name: keruta-secrets
-             key: auth-token
+       - name: JWT_SECRET
+         value: "your-jwt-secret-key"
+
    ```
 
 ## APIユーティリティの使用方法
@@ -152,7 +156,7 @@ try {
 } catch (err) {
   if (err instanceof ApiError) {
     console.error(`API Error: ${err.message}, Status: ${err.status}`);
-    
+
     // ステータスコードに基づいた処理
     if (err.status === 401) {
       // 認証エラーの処理
