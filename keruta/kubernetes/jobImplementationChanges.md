@@ -58,6 +58,19 @@ The changes have been tested to ensure that:
 2. The environment variables are set correctly
 3. The API token is retrieved from the Kubernetes secret
 
+## Recent Improvements
+
+### 1. Token Update Before Job Execution
+
+The `KubernetesContainerCreator` class has been updated to ensure that the keruta-api-token is updated to the latest before job execution:
+
+```kotlin
+// Update the API token secret to ensure it's the latest before job execution
+val token = clientProvider.updateApiTokenSecret(namespace)
+```
+
+This change ensures that each job uses a fresh API token, improving security by reducing the risk of token reuse or compromise.
+
 ## Next Steps
 
 1. Create a Kubernetes secret named `keruta-api-token` with a key `token` containing the API token
