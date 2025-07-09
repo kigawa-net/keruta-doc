@@ -2,6 +2,9 @@
 
 本リポジトリは、kerutaプロジェクトの設計・運用・技術情報をまとめたドキュメント集です。
 
+> **注意**: このディレクトリは https://github.com/kigawa-net/keruta-doc リポジトリに移行されます。
+> OpenAPI仕様書は自動的に生成され、GitHub Actionsによって上記リポジトリに自動的にプッシュされます。
+
 ## サブプロジェクト
 - `keruta`: keruta APIサーバーの設計・運用ドキュメント（`keruta/` ディレクトリに配置）
 - `keruta-github`: kerutaをGitHubから操作するためのツール/サービス（`keruta-github/` ディレクトリに配置）
