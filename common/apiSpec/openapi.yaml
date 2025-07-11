@@ -861,6 +861,12 @@ paths:
 components:
   schemas:
     Document:
+      required:
+      - content
+      - createdAt
+      - tags
+      - title
+      - updatedAt
       type: object
       properties:
         id:
@@ -880,6 +886,9 @@ components:
           type: string
           format: date-time
     ResourcesDto:
+      required:
+      - cpu
+      - memory
       type: object
       properties:
         cpu:
@@ -887,6 +896,16 @@ components:
         memory:
           type: string
     TaskResponse:
+      required:
+      - additionalEnv
+      - createdAt
+      - documents
+      - id
+      - namespace
+      - priority
+      - status
+      - title
+      - updatedAt
       type: object
       properties:
         id:
@@ -929,6 +948,10 @@ components:
           type: string
           format: date-time
     ScriptRequest:
+      required:
+      - cleanupScript
+      - executeScript
+      - installScript
       type: object
       properties:
         installScript:
@@ -938,6 +961,10 @@ components:
         cleanupScript:
           type: string
     ScriptContent:
+      required:
+      - cleanupScript
+      - executeScript
+      - installScript
       type: object
       properties:
         installScript:
@@ -947,6 +974,12 @@ components:
         cleanupScript:
           type: string
     ScriptResponse:
+      required:
+      - createdAt
+      - environment
+      - script
+      - taskId
+      - updatedAt
       type: object
       properties:
         taskId:
@@ -964,6 +997,17 @@ components:
           type: string
           format: date-time
     Repository:
+      required:
+      - createdAt
+      - description
+      - isValid
+      - name
+      - pvcAccessMode
+      - pvcStorageClass
+      - pvcStorageSize
+      - setupScript
+      - updatedAt
+      - url
       type: object
       properties:
         id:
@@ -974,6 +1018,8 @@ components:
           type: string
         description:
           type: string
+        isValid:
+          type: boolean
         setupScript:
           type: string
         pvcStorageSize:
@@ -988,9 +1034,15 @@ components:
         updatedAt:
           type: string
           format: date-time
-        valid:
-          type: boolean
     Agent:
+      required:
+      - createdAt
+      - executeCommand
+      - installCommand
+      - languages
+      - name
+      - status
+      - updatedAt
       type: object
       properties:
         id:
@@ -1020,6 +1072,13 @@ components:
           type: string
           format: date-time
     CreateTaskRequest:
+      required:
+      - additionalEnv
+      - documents
+      - namespace
+      - priority
+      - status
+      - title
       type: object
       properties:
         title:
@@ -1048,11 +1107,17 @@ components:
         parentId:
           type: string
     RefreshTokenRequest:
+      required:
+      - refreshToken
       type: object
       properties:
         refreshToken:
           type: string
     TokenResponse:
+      required:
+      - accessToken
+      - refreshToken
+      - tokenType
       type: object
       properties:
         accessToken:
@@ -1062,6 +1127,9 @@ components:
         tokenType:
           type: string
     LoginRequest:
+      required:
+      - password
+      - username
       type: object
       properties:
         username:
