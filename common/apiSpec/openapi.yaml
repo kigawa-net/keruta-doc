@@ -298,6 +298,41 @@ paths:
       responses:
         "200":
           description: OK
+  /api/v1/tasks:
+    get:
+      tags:
+      - Task
+      summary: Get all tasks
+      description: Retrieves all tasks in the system
+      operationId: getAllTasks
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaskResponse'
+    post:
+      tags:
+      - Task
+      summary: Create a new task
+      description: Creates a new task in the system
+      operationId: createTask
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTaskRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
   /api/v1/tasks/{id}/logs/stream:
     post:
       tags:
@@ -564,22 +599,6 @@ paths:
             '*/*':
               schema:
                 type: string
-  /api/v1/tasks:
-    get:
-      tags:
-      - Task
-      summary: Get all tasks
-      description: Retrieves all tasks in the system
-      operationId: getAllTasks
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/TaskResponse'
   /api/v1/tasks/{id}:
     get:
       tags:
@@ -1000,6 +1019,34 @@ components:
         updatedAt:
           type: string
           format: date-time
+    CreateTaskRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        priority:
+          type: integer
+          format: int32
+        status:
+          type: string
+        documents:
+          type: array
+          items:
+            $ref: '#/components/schemas/Document'
+        image:
+          type: string
+        namespace:
+          type: string
+        additionalEnv:
+          type: object
+          additionalProperties:
+            type: string
+        repositoryId:
+          type: string
+        parentId:
+          type: string
     RefreshTokenRequest:
       type: object
       properties:
