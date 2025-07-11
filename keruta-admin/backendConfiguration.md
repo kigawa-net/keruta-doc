@@ -176,7 +176,7 @@ try {
 
 バックエンド設定とAPIユーティリティの実装は以下のファイルにあります：
 
-- `app/utils/backendConfig.ts`: バックエンド設定
+- `app/utils/backendConfig.server.ts`: バックエンド設定
 - `app/utils/api.ts`: APIユーティリティ
 
 これらのファイルを参照することで、実装の詳細を確認できます。
