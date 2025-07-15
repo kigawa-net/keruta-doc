@@ -10,6 +10,8 @@ tags:
   description: Repository setup script API
 - name: Agent
   description: Agent management API
+- name: Session
+  description: Session management API
 - name: Document
   description: Document management API
 - name: Repository
@@ -118,6 +120,94 @@ paths:
             '*/*':
               schema:
                 $ref: '#/components/schemas/TaskResponse'
+  /api/v1/sessions/{id}:
+    get:
+      tags:
+      - Session
+      summary: Get session by ID
+      description: Retrieves a specific session by its ID
+      operationId: getSessionById
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/SessionResponse'
+    put:
+      tags:
+      - Session
+      summary: Update session
+      description: Updates an existing session
+      operationId: updateSession
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSessionRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/SessionResponse'
+    delete:
+      tags:
+      - Session
+      summary: Delete session
+      description: Deletes a specific session
+      operationId: deleteSession
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+  /api/v1/sessions/{id}/status:
+    put:
+      tags:
+      - Session
+      summary: Update session status
+      description: Updates the status of a specific session
+      operationId: updateSessionStatus
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties:
+                type: string
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/SessionResponse'
   /api/v1/repositories/{id}:
     get:
       tags:
@@ -366,6 +456,69 @@ paths:
       responses:
         "200":
           description: OK
+  /api/v1/sessions:
+    get:
+      tags:
+      - Session
+      summary: Get all sessions
+      description: Retrieves all sessions in the system
+      operationId: getAllSessions
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SessionResponse'
+    post:
+      tags:
+      - Session
+      summary: Create a new session
+      description: Creates a new session in the system
+      operationId: createSession
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSessionRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/SessionResponse'
+  /api/v1/sessions/{id}/tags:
+    post:
+      tags:
+      - Session
+      summary: Add tag to session
+      description: Adds a tag to a specific session
+      operationId: addTagToSession
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties:
+                type: string
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/SessionResponse'
   /api/v1/repositories:
     get:
       tags:
@@ -677,6 +830,94 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/TaskResponse'
+  /api/v1/tasks/session/{session}:
+    get:
+      tags:
+      - Task
+      summary: Get tasks by session
+      description: Retrieves all tasks with a specific session
+      operationId: getTasksBySession
+      parameters:
+      - name: session
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaskResponse'
+  /api/v1/sessions/tag/{tag}:
+    get:
+      tags:
+      - Session
+      summary: Get sessions by tag
+      description: Retrieves all sessions with a specific tag
+      operationId: getSessionsByTag
+      parameters:
+      - name: tag
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SessionResponse'
+  /api/v1/sessions/status/{status}:
+    get:
+      tags:
+      - Session
+      summary: Get sessions by status
+      description: Retrieves all sessions with a specific status
+      operationId: getSessionsByStatus
+      parameters:
+      - name: status
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SessionResponse'
+  /api/v1/sessions/search:
+    get:
+      tags:
+      - Session
+      summary: Search sessions by name
+      description: Searches sessions by name pattern
+      operationId: searchSessionsByName
+      parameters:
+      - name: name
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SessionResponse'
   /api/v1/repositories/{id}/validate:
     get:
       tags:
@@ -858,6 +1099,31 @@ paths:
             '*/*':
               schema:
                 type: string
+  /api/v1/sessions/{id}/tags/{tag}:
+    delete:
+      tags:
+      - Session
+      summary: Remove tag from session
+      description: Removes a tag from a specific session
+      operationId: removeTagFromSession
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: tag
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/SessionResponse'
 components:
   schemas:
     Document:
@@ -941,6 +1207,8 @@ components:
           type: string
         parentId:
           type: string
+        session:
+          type: string
         createdAt:
           type: string
           format: date-time
@@ -987,6 +1255,61 @@ components:
         script:
           $ref: '#/components/schemas/ScriptContent'
         environment:
+          type: object
+          additionalProperties:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    UpdateSessionRequest:
+      required:
+      - metadata
+      - name
+      - status
+      - tags
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        metadata:
+          type: object
+          additionalProperties:
+            type: string
+    SessionResponse:
+      required:
+      - createdAt
+      - id
+      - metadata
+      - name
+      - status
+      - tags
+      - updatedAt
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        metadata:
           type: object
           additionalProperties:
             type: string
@@ -1106,6 +1429,30 @@ components:
           type: string
         parentId:
           type: string
+        session:
+          type: string
+    CreateSessionRequest:
+      required:
+      - metadata
+      - name
+      - status
+      - tags
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        metadata:
+          type: object
+          additionalProperties:
+            type: string
     RefreshTokenRequest:
       required:
       - refreshToken
