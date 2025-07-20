@@ -677,53 +677,6 @@ paths:
             '*/*':
               schema:
                 $ref: '#/components/schemas/SessionResponse'
-  /api/v1/sessions/{id}/workspaces:
-    get:
-      tags:
-      - Session
-      summary: Get session workspaces
-      description: Gets all workspaces for a specific session
-      operationId: getSessionWorkspaces
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/WorkspaceResponse'
-    post:
-      tags:
-      - Session
-      summary: Create session workspace
-      description: Creates a workspace for a specific session
-      operationId: createSessionWorkspace
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateWorkspaceRequest'
-        required: true
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/WorkspaceResponse'
   /api/v1/sessions/{id}/tags:
     post:
       tags:
@@ -752,6 +705,42 @@ paths:
             '*/*':
               schema:
                 $ref: '#/components/schemas/SessionResponse'
+  /api/v1/sessions/{id}/sync-status:
+    post:
+      tags:
+      - Session
+      summary: Sync session status
+      description: Synchronizes session status with workspace states
+      operationId: syncSessionStatus
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/SessionResponse'
+  /api/v1/sessions/{id}/monitor-workspaces:
+    post:
+      tags:
+      - Session
+      summary: Monitor session workspaces
+      description: Forces monitoring of all workspaces in a session from Coder
+      operationId: monitorSessionWorkspaces
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
   /api/v1/repositories:
     get:
       tags:
@@ -1116,6 +1105,26 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/TaskResponse'
+  /api/v1/sessions/{id}/workspace:
+    get:
+      tags:
+      - Session
+      summary: Get session workspace
+      description: Gets the single workspace for a specific session
+      operationId: getSessionWorkspace
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/WorkspaceResponse'
   /api/v1/sessions/{id}/detail:
     get:
       tags:
