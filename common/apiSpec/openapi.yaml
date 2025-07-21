@@ -1801,6 +1801,32 @@ components:
         updatedAt:
           type: string
           format: date-time
+    SessionTemplateConfigRequest:
+      required:
+      - parameters
+      - preferredKeywords
+      - repositoryRef
+      - templatePath
+      type: object
+      properties:
+        templateId:
+          type: string
+        templateName:
+          type: string
+        repositoryUrl:
+          type: string
+        repositoryRef:
+          type: string
+        templatePath:
+          type: string
+        preferredKeywords:
+          type: array
+          items:
+            type: string
+        parameters:
+          type: object
+          additionalProperties:
+            type: string
     UpdateSessionRequest:
       required:
       - metadata
@@ -1823,6 +1849,8 @@ components:
           type: object
           additionalProperties:
             type: string
+        templateConfig:
+          $ref: '#/components/schemas/SessionTemplateConfigRequest'
     SessionResponse:
       required:
       - createdAt
@@ -1851,6 +1879,8 @@ components:
           type: object
           additionalProperties:
             type: string
+        templateConfig:
+          $ref: '#/components/schemas/SessionTemplateConfigResponse'
         createdAt:
           type: string
           format: date-time
@@ -1861,6 +1891,32 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/SessionWorkspaceInfo'
+    SessionTemplateConfigResponse:
+      required:
+      - parameters
+      - preferredKeywords
+      - repositoryRef
+      - templatePath
+      type: object
+      properties:
+        templateId:
+          type: string
+        templateName:
+          type: string
+        repositoryUrl:
+          type: string
+        repositoryRef:
+          type: string
+        templatePath:
+          type: string
+        preferredKeywords:
+          type: array
+          items:
+            type: string
+        parameters:
+          type: object
+          additionalProperties:
+            type: string
     SessionWorkspaceInfo:
       required:
       - createdAt
@@ -2067,6 +2123,8 @@ components:
           type: object
           additionalProperties:
             type: string
+        templateConfig:
+          $ref: '#/components/schemas/SessionTemplateConfigRequest'
     RefreshTokenRequest:
       required:
       - refreshToken
