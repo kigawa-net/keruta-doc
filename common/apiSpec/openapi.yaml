@@ -16,6 +16,8 @@ tags:
   description: Session detail management API
 - name: Document
   description: Document management API
+- name: Template
+  description: Coder template management API
 - name: Repository
   description: Git repository management API
 - name: Authentication
@@ -94,6 +96,66 @@ paths:
       tags:
       - workspace-controller
       operationId: deleteWorkspaceTemplate
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+  /api/v1/templates/{id}:
+    get:
+      tags:
+      - Template
+      summary: Get template by ID
+      description: Retrieves a specific template by its ID
+      operationId: getTemplateById
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Template'
+    put:
+      tags:
+      - Template
+      summary: Update template
+      description: Updates an existing template
+      operationId: updateTemplate
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTemplateRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Template'
+    delete:
+      tags:
+      - Template
+      summary: Delete template
+      description: Deletes a template by its ID
+      operationId: deleteTemplate
       parameters:
       - name: id
         in: path
@@ -574,6 +636,89 @@ paths:
             '*/*':
               schema:
                 $ref: '#/components/schemas/WorkspaceTemplateResponse'
+  /api/v1/templates:
+    get:
+      tags:
+      - Template
+      summary: Get all templates
+      description: Retrieves a list of all Terraform templates
+      operationId: getAllTemplates
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Template'
+    post:
+      tags:
+      - Template
+      summary: Create a new template
+      description: Creates a new Terraform template
+      operationId: createTemplate
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTemplateRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Template'
+  /api/v1/templates/{id}/validate:
+    post:
+      tags:
+      - Template
+      summary: Validate template
+      description: Validates the Terraform syntax of a template
+      operationId: validateTemplate
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidateTemplateRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ValidateTemplateResponse'
+  /api/v1/templates/{id}/deploy:
+    post:
+      tags:
+      - Template
+      summary: Deploy template to Coder
+      description: Deploys the template to Coder server
+      operationId: deployToCoder
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
   /api/v1/tasks:
     get:
       tags:
@@ -1663,6 +1808,40 @@ components:
         updatedAt:
           type: string
           format: date-time
+    UpdateTemplateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        content:
+          type: string
+    Template:
+      required:
+      - content
+      - description
+      - id
+      - lastModified
+      - name
+      - path
+      - status
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        path:
+          type: string
+        content:
+          type: string
+        lastModified:
+          type: string
+        status:
+          type: string
     Document:
       required:
       - content
@@ -2063,6 +2242,43 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/WorkspaceTemplateParameterRequest'
+    CreateTemplateRequest:
+      required:
+      - content
+      - description
+      - name
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        content:
+          type: string
+    ValidateTemplateRequest:
+      required:
+      - content
+      type: object
+      properties:
+        content:
+          type: string
+    ValidateTemplateResponse:
+      required:
+      - errors
+      - isValid
+      - warnings
+      type: object
+      properties:
+        isValid:
+          type: boolean
+        errors:
+          type: array
+          items:
+            type: string
+        warnings:
+          type: array
+          items:
+            type: string
     CreateTaskRequest:
       required:
       - additionalEnv
