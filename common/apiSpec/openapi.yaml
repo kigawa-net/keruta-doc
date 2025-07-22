@@ -165,6 +165,51 @@ paths:
       responses:
         "200":
           description: OK
+  /api/v1/templates/content:
+    get:
+      tags:
+      - Template
+      summary: Get template content by path
+      description: Retrieves template content by file path
+      operationId: getTemplateContent
+      parameters:
+      - name: path
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/TemplateContentResponse'
+    put:
+      tags:
+      - Template
+      summary: Update template content by path
+      description: Updates template content by file path
+      operationId: updateTemplateContent
+      parameters:
+      - name: path
+        in: query
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTemplateContentRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/UpdateTemplateContentResponse'
   /api/v1/tasks/{id}/status:
     put:
       tags:
@@ -1842,6 +1887,20 @@ components:
           type: string
         status:
           type: string
+    UpdateTemplateContentRequest:
+      required:
+      - content
+      type: object
+      properties:
+        content:
+          type: string
+    UpdateTemplateContentResponse:
+      required:
+      - success
+      type: object
+      properties:
+        success:
+          type: boolean
     Document:
       required:
       - content
@@ -2370,6 +2429,13 @@ components:
         username:
           type: string
         password:
+          type: string
+    TemplateContentResponse:
+      required:
+      - content
+      type: object
+      properties:
+        content:
           type: string
     SessionDetailResponse:
       required:
