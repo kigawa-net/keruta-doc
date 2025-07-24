@@ -920,7 +920,7 @@ paths:
       tags:
       - Session
       summary: Monitor session workspaces
-      description: Forces monitoring of all workspaces in a session from Coder
+      description: "Stub: Workspace monitoring moved to keruta-executor"
       operationId: monitorSessionWorkspaces
       parameters:
       - name: id
