@@ -860,6 +860,26 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/SessionResponse'
+  /api/v1/sessions/by-workspace/{workspaceId}:
+    get:
+      tags:
+      - Session
+      summary: Get session by workspace ID
+      description: Retrieves a session by its associated workspace ID
+      operationId: getSessionByWorkspaceId
+      parameters:
+      - name: workspaceId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/SessionResponse'
   /api/v1/health:
     get:
       tags:
