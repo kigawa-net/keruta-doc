@@ -16,6 +16,8 @@ tags:
   description: Coder template management API
 - name: Authentication
   description: Authentication API (Disabled)
+- name: Task
+  description: Task management API
 paths:
   /api/v1/workspaces/{id}/status:
     put:
@@ -202,6 +204,94 @@ paths:
             '*/*':
               schema:
                 $ref: '#/components/schemas/UpdateTemplateContentResponse'
+  /api/v1/tasks/{id}:
+    get:
+      tags:
+      - Task
+      summary: Get task by ID
+      description: Retrieves a specific task by its ID
+      operationId: getTaskById
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+    put:
+      tags:
+      - Task
+      summary: Update task
+      description: Updates an existing task
+      operationId: updateTask
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTaskRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+    delete:
+      tags:
+      - Task
+      summary: Delete task
+      description: Deletes a specific task
+      operationId: deleteTask
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+  /api/v1/tasks/{id}/status:
+    put:
+      tags:
+      - Task
+      summary: Update task status
+      description: Updates the status of a specific task
+      operationId: updateTaskStatus
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties:
+                type: string
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
   /api/v1/sessions/{id}:
     get:
       tags:
@@ -537,6 +627,205 @@ paths:
                 type: object
                 additionalProperties:
                   type: string
+  /api/v1/tasks:
+    get:
+      tags:
+      - Task
+      summary: Get all tasks
+      description: Retrieves all tasks in the system
+      operationId: getAllTasks
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaskResponse'
+    post:
+      tags:
+      - Task
+      summary: Create a new task
+      description: Creates a new task in the system
+      operationId: createTask
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTaskRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+  /api/v1/tasks/{id}/start:
+    post:
+      tags:
+      - Task
+      summary: Start task
+      description: Starts a specific task
+      operationId: startTask
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+  /api/v1/tasks/{id}/retry:
+    post:
+      tags:
+      - Task
+      summary: Retry task
+      description: Retries a specific task
+      operationId: retryTask
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+  /api/v1/tasks/{id}/logs:
+    post:
+      tags:
+      - Task
+      summary: Add log to task
+      description: Adds a log message to a specific task
+      operationId: addLogToTask
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties:
+                type: string
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+  /api/v1/tasks/{id}/fail:
+    post:
+      tags:
+      - Task
+      summary: Fail task
+      description: Marks a specific task as failed
+      operationId: failTask
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties:
+                type: string
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+  /api/v1/tasks/{id}/complete:
+    post:
+      tags:
+      - Task
+      summary: Complete task
+      description: Marks a specific task as completed
+      operationId: completeTask
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+  /api/v1/tasks/{id}/cancel:
+    post:
+      tags:
+      - Task
+      summary: Cancel task
+      description: Cancels a specific task
+      operationId: cancelTask
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+  /api/v1/tasks/{id}/artifacts:
+    post:
+      tags:
+      - Task
+      summary: Add artifact to task
+      description: Adds an artifact to a specific task
+      operationId: addArtifactToTask
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties:
+                type: string
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
   /api/v1/sessions:
     get:
       tags:
@@ -754,6 +1043,138 @@ paths:
       responses:
         "200":
           description: OK
+  /api/v1/tasks/workspace/{workspaceId}:
+    get:
+      tags:
+      - Task
+      summary: Get tasks by workspace ID
+      description: Retrieves all tasks for a specific workspace
+      operationId: getTasksByWorkspaceId
+      parameters:
+      - name: workspaceId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaskResponse'
+  /api/v1/tasks/tag/{tag}:
+    get:
+      tags:
+      - Task
+      summary: Get tasks by tag
+      description: Retrieves all tasks with a specific tag
+      operationId: getTasksByTag
+      parameters:
+      - name: tag
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaskResponse'
+  /api/v1/tasks/status/{status}:
+    get:
+      tags:
+      - Task
+      summary: Get tasks by status
+      description: Retrieves all tasks with a specific status
+      operationId: getTasksByStatus
+      parameters:
+      - name: status
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaskResponse'
+  /api/v1/tasks/session/{sessionId}:
+    get:
+      tags:
+      - Task
+      summary: Get tasks by session ID
+      description: Retrieves all tasks for a specific session
+      operationId: getTasksBySessionId
+      parameters:
+      - name: sessionId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaskResponse'
+  /api/v1/tasks/session/{sessionId}/pending:
+    get:
+      tags:
+      - Task
+      summary: Get pending tasks for session
+      description: Retrieves pending tasks for a specific session
+      operationId: getPendingTasksForSession
+      parameters:
+      - name: sessionId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaskResponse'
+  /api/v1/tasks/search:
+    get:
+      tags:
+      - Task
+      summary: Search tasks by name
+      description: Searches tasks by name pattern
+      operationId: searchTasksByName
+      parameters:
+      - name: name
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaskResponse'
   /api/v1/sessions/{id}/workspace:
     get:
       tags:
@@ -1252,6 +1673,124 @@ components:
       properties:
         success:
           type: boolean
+    UpdateTaskRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        script:
+          type: string
+        status:
+          type: string
+        priority:
+          type: integer
+          format: int32
+        parameters:
+          type: object
+          additionalProperties:
+            type: string
+        tags:
+          type: array
+          items:
+            type: string
+        metadata:
+          type: object
+          additionalProperties:
+            type: string
+        maxRetries:
+          type: integer
+          format: int32
+        dependsOn:
+          type: array
+          items:
+            type: string
+    TaskResponse:
+      required:
+      - artifacts
+      - createdAt
+      - dependsOn
+      - id
+      - logs
+      - maxRetries
+      - metadata
+      - name
+      - parameters
+      - priority
+      - retryCount
+      - script
+      - sessionId
+      - status
+      - tags
+      - updatedAt
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        script:
+          type: string
+        status:
+          type: string
+        sessionId:
+          type: string
+        workspaceId:
+          type: string
+        priority:
+          type: integer
+          format: int32
+        parameters:
+          type: object
+          additionalProperties:
+            type: string
+        tags:
+          type: array
+          items:
+            type: string
+        metadata:
+          type: object
+          additionalProperties:
+            type: string
+        startedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+        errorMessage:
+          type: string
+        errorCode:
+          type: string
+        retryCount:
+          type: integer
+          format: int32
+        maxRetries:
+          type: integer
+          format: int32
+        parentTaskId:
+          type: string
+        dependsOn:
+          type: array
+          items:
+            type: string
+        artifacts:
+          type: array
+          items:
+            type: string
+        logs:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
     SessionTemplateConfigRequest:
       required:
       - parameters
@@ -1498,6 +2037,53 @@ components:
           items:
             type: string
         warnings:
+          type: array
+          items:
+            type: string
+    CreateTaskRequest:
+      required:
+      - dependsOn
+      - maxRetries
+      - metadata
+      - name
+      - parameters
+      - priority
+      - script
+      - sessionId
+      - tags
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        script:
+          type: string
+        sessionId:
+          type: string
+        workspaceId:
+          type: string
+        priority:
+          type: integer
+          format: int32
+        parameters:
+          type: object
+          additionalProperties:
+            type: string
+        tags:
+          type: array
+          items:
+            type: string
+        metadata:
+          type: object
+          additionalProperties:
+            type: string
+        maxRetries:
+          type: integer
+          format: int32
+        parentTaskId:
+          type: string
+        dependsOn:
           type: array
           items:
             type: string
