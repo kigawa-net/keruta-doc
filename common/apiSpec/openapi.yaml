@@ -1342,6 +1342,38 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Document'
+  /api/v1/coder/templates:
+    get:
+      tags:
+      - coder-controller
+      operationId: getCoderTemplates
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CoderTemplateResponse'
+  /api/v1/coder/templates/{id}:
+    get:
+      tags:
+      - coder-controller
+      operationId: getCoderTemplate
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/CoderTemplateResponse'
   /:
     get:
       tags:
@@ -2281,3 +2313,57 @@ components:
         buildCompletedAt:
           type: string
           format: date-time
+    CoderTemplateResponse:
+      required:
+      - active_version_id
+      - created_by_name
+      - default_ttl_ms
+      - deprecated
+      - description
+      - display_name
+      - icon
+      - id
+      - max_ttl_ms
+      - min_autostart_interval_ms
+      - name
+      - organization_id
+      - provisioner
+      - updated_at
+      - workspace_count
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        display_name:
+          type: string
+        description:
+          type: string
+        icon:
+          type: string
+        default_ttl_ms:
+          type: integer
+          format: int64
+        max_ttl_ms:
+          type: integer
+          format: int64
+        min_autostart_interval_ms:
+          type: integer
+          format: int64
+        created_by_name:
+          type: string
+        updated_at:
+          type: string
+          format: date-time
+        organization_id:
+          type: string
+        provisioner:
+          type: string
+        active_version_id:
+          type: string
+        workspace_count:
+          type: integer
+          format: int32
+        deprecated:
+          type: boolean
