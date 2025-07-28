@@ -8,12 +8,20 @@ servers:
 tags:
 - name: Session
   description: Session management API
+- name: Workspace-Task Integration
+  description: Integrated workspace and task management API
 - name: Session Detail
   description: Session detail management API
+- name: Custom Templates
+  description: Custom workspace template management API
 - name: Document
   description: Document management API
 - name: Template
   description: Coder template management API
+- name: Repository Management
+  description: リポジトリ管理API
+- name: Default Templates
+  description: Default workspace template management API
 - name: Authentication
   description: Authentication API (Disabled)
 - name: Task
@@ -159,6 +167,92 @@ paths:
       responses:
         "200":
           description: OK
+  /api/v1/templates/default/{templateId}/set-default:
+    put:
+      tags:
+      - Default Templates
+      summary: Set template as default
+      description: Set a specific template as the default template
+      operationId: setAsDefaultTemplate
+      parameters:
+      - name: templateId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/WorkspaceTemplateResponse'
+  /api/v1/templates/custom/{templateId}:
+    get:
+      tags:
+      - Custom Templates
+      summary: Get template by ID
+      description: Retrieve a specific template by its ID
+      operationId: getTemplateById_1
+      parameters:
+      - name: templateId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/WorkspaceTemplateResponse'
+    put:
+      tags:
+      - Custom Templates
+      summary: Update custom template
+      description: Update an existing custom workspace template
+      operationId: updateCustomTemplate
+      parameters:
+      - name: templateId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCustomTemplateRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/WorkspaceTemplateResponse'
+    delete:
+      tags:
+      - Custom Templates
+      summary: Delete custom template
+      description: Delete a custom workspace template
+      operationId: deleteCustomTemplate
+      parameters:
+      - name: templateId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
   /api/v1/templates/content:
     get:
       tags:
@@ -380,6 +474,72 @@ paths:
             '*/*':
               schema:
                 $ref: '#/components/schemas/SessionResponse'
+  /api/v1/repositories/{id}:
+    get:
+      tags:
+      - Repository Management
+      summary: リポジトリ詳細取得
+      description: 指定されたIDのリポジトリ詳細を取得します
+      operationId: getRepositoryById
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/RepositoryDetailResponse'
+    put:
+      tags:
+      - Repository Management
+      summary: リポジトリ更新
+      description: 既存のリポジトリを更新します
+      operationId: updateRepository
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRepositoryRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/RepositoryResponse'
+    delete:
+      tags:
+      - Repository Management
+      summary: リポジトリ削除
+      description: 指定されたIDのリポジトリを削除します
+      operationId: deleteRepository
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
   /api/v1/documents/{id}:
     get:
       tags:
@@ -627,6 +787,186 @@ paths:
                 type: object
                 additionalProperties:
                   type: string
+  /api/v1/templates/default/validate/{templateId}:
+    post:
+      tags:
+      - Default Templates
+      summary: Validate template parameters
+      description: Validate the parameters of a specific template
+      operationId: validateTemplate_1
+      parameters:
+      - name: templateId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+  /api/v1/templates/default/validate-parameter:
+    post:
+      tags:
+      - Default Templates
+      summary: Validate parameter value
+      description: Validate a parameter value against its template definition
+      operationId: validateParameterValue
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidateParameterRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+  /api/v1/templates/default/update-configuration:
+    post:
+      tags:
+      - Default Templates
+      summary: Update default template configuration
+      description: Update and validate default template configuration
+      operationId: updateDefaultTemplateConfiguration
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
+  /api/v1/templates/default/reset-basic:
+    post:
+      tags:
+      - Default Templates
+      summary: Reset to basic default
+      description: Reset to basic default template configuration
+      operationId: resetToBasicDefault
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/WorkspaceTemplateResponse'
+  /api/v1/templates/default/initialize:
+    post:
+      tags:
+      - Default Templates
+      summary: Initialize default templates
+      description: Initialize default workspace templates if they don't exist
+      operationId: initializeDefaultTemplates
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
+  /api/v1/templates/custom:
+    get:
+      tags:
+      - Custom Templates
+      summary: Get custom templates
+      description: Retrieve all custom workspace templates
+      operationId: getCustomTemplates
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WorkspaceTemplateResponse'
+    post:
+      tags:
+      - Custom Templates
+      summary: Create custom template
+      description: Create a new custom workspace template
+      operationId: createCustomTemplate
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCustomTemplateRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/WorkspaceTemplateResponse'
+  /api/v1/templates/custom/{templateId}/clone:
+    post:
+      tags:
+      - Custom Templates
+      summary: Clone template
+      description: Create a new template by cloning an existing one
+      operationId: cloneTemplate
+      parameters:
+      - name: templateId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CloneTemplateRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/WorkspaceTemplateResponse'
+  /api/v1/templates/custom/import:
+    post:
+      tags:
+      - Custom Templates
+      summary: Import template
+      description: Import template configuration from JSON
+      operationId: importTemplate
+      parameters:
+      - name: overwriteExisting
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties:
+                type: object
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/WorkspaceTemplateResponse'
   /api/v1/tasks:
     get:
       tags:
@@ -925,6 +1265,183 @@ paths:
       responses:
         "200":
           description: OK
+  /api/v1/repositories:
+    get:
+      tags:
+      - Repository Management
+      summary: リポジトリ一覧取得
+      description: 全てのリポジトリの一覧を取得します
+      operationId: getAllRepositories
+      parameters:
+      - name: search
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: activeOnly
+        in: query
+        required: false
+        schema:
+          type: boolean
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RepositoryResponse'
+    post:
+      tags:
+      - Repository Management
+      summary: リポジトリ作成
+      description: 新しいリポジトリを作成します
+      operationId: createRepository
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRepositoryRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/RepositoryResponse'
+  /api/v1/repositories/{id}/toggle-status:
+    post:
+      tags:
+      - Repository Management
+      summary: リポジトリ状態切り替え
+      description: リポジトリのアクティブ/非アクティブ状態を切り替えます
+      operationId: toggleRepositoryStatus
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/RepositoryResponse'
+  /api/v1/repositories/{id}/test-script:
+    post:
+      tags:
+      - Repository Management
+      summary: インストールスクリプトテスト
+      description: インストールスクリプトのテスト実行を行います
+      operationId: testInstallScript
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/RepositoryOperationResponse'
+  /api/v1/repositories/{id}/test-connection:
+    post:
+      tags:
+      - Repository Management
+      summary: リポジトリ接続テスト
+      description: リポジトリへの接続をテストします
+      operationId: testRepositoryConnection
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/RepositoryOperationResponse'
+  /api/v1/repositories/{id}/clone:
+    post:
+      tags:
+      - Repository Management
+      summary: リポジトリクローン
+      description: リポジトリをクローンします
+      operationId: cloneRepository
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CloneRepositoryRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/RepositoryOperationResponse'
+  /api/v1/repositories/generate-script:
+    post:
+      tags:
+      - Repository Management
+      summary: インストールスクリプト生成
+      description: テンプレートからインストールスクリプトを生成します
+      operationId: generateInstallScript
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateScriptRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
+  /api/v1/integration/tasks/{taskId}/execute:
+    post:
+      tags:
+      - Workspace-Task Integration
+      summary: Execute task in workspace
+      description: "Executes a task within its associated workspace, ensuring workspace\
+        \ is ready"
+      operationId: executeTaskInWorkspace
+      parameters:
+      - name: taskId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
   /api/v1/documents:
     get:
       tags:
@@ -1049,6 +1566,114 @@ paths:
             '*/*':
               schema:
                 $ref: '#/components/schemas/WorkspaceResponse'
+  /api/v1/templates/default:
+    get:
+      tags:
+      - Default Templates
+      summary: Get default templates
+      description: Retrieve all default workspace templates
+      operationId: getDefaultTemplates
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WorkspaceTemplateResponse'
+  /api/v1/templates/default/health:
+    get:
+      tags:
+      - Default Templates
+      summary: Default template health check
+      description: Health check for default template management
+      operationId: healthCheck
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+  /api/v1/templates/custom/{templateId}/export:
+    get:
+      tags:
+      - Custom Templates
+      summary: Export template
+      description: Export template configuration as JSON
+      operationId: exportTemplate
+      parameters:
+      - name: templateId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+  /api/v1/templates/custom/stats:
+    get:
+      tags:
+      - Custom Templates
+      summary: Get template usage statistics
+      description: Retrieve statistics about template usage
+      operationId: getTemplateUsageStats
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+  /api/v1/templates/custom/search:
+    get:
+      tags:
+      - Custom Templates
+      summary: Search templates
+      description: Search templates by name pattern
+      operationId: searchTemplates
+      parameters:
+      - name: pattern
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WorkspaceTemplateResponse'
+  /api/v1/templates/custom/health:
+    get:
+      tags:
+      - Custom Templates
+      summary: Custom template health check
+      description: Health check for custom template management
+      operationId: healthCheck_1
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
   /api/v1/tasks/workspace/{workspaceId}:
     get:
       tags:
@@ -1307,6 +1932,108 @@ paths:
             '*/*':
               schema:
                 $ref: '#/components/schemas/SessionResponse'
+  /api/v1/repositories/templates:
+    get:
+      tags:
+      - Repository Management
+      summary: インストールスクリプトテンプレート一覧
+      description: 利用可能なインストールスクリプトテンプレートの一覧を取得します
+      operationId: getInstallScriptTemplates
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/InstallScriptTemplateResponse'
+  /api/v1/repositories/tags:
+    get:
+      tags:
+      - Repository Management
+      summary: 利用可能なタグ一覧
+      description: リポジトリで使用されている全てのタグを取得します
+      operationId: getAvailableTags
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  type: string
+  /api/v1/repositories/stats:
+    get:
+      tags:
+      - Repository Management
+      summary: リポジトリ統計情報
+      description: リポジトリの統計情報を取得します
+      operationId: getRepositoryStats
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+  /api/v1/integration/tasks/{taskId}/execution-info:
+    get:
+      tags:
+      - Workspace-Task Integration
+      summary: Get task execution info
+      description: Retrieves detailed execution information for a specific task
+      operationId: getTaskExecutionInfo
+      parameters:
+      - name: taskId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+  /api/v1/integration/stats/execution:
+    get:
+      tags:
+      - Workspace-Task Integration
+      summary: Get task execution statistics
+      description: Retrieves overall statistics about task execution
+      operationId: getTaskExecutionStats
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+  /api/v1/integration/health:
+    get:
+      tags:
+      - Workspace-Task Integration
+      summary: Integration health check
+      description: Health check for workspace-task integration services
+      operationId: healthCheck_2
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
   /api/v1/health:
     get:
       tags:
@@ -1685,6 +2412,49 @@ components:
           type: string
         status:
           type: string
+    CreateWorkspaceTemplateParameterRequest:
+      required:
+      - displayName
+      - mutable
+      - name
+      - options
+      - required
+      - type
+      type: object
+      properties:
+        name:
+          type: string
+        displayName:
+          type: string
+        description:
+          type: string
+        type:
+          type: string
+        required:
+          type: boolean
+        defaultValue:
+          type: string
+        options:
+          type: array
+          items:
+            type: string
+        validationRegex:
+          type: string
+        mutable:
+          type: boolean
+    UpdateCustomTemplateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        icon:
+          type: string
+        parameters:
+          type: array
+          items:
+            $ref: '#/components/schemas/CreateWorkspaceTemplateParameterRequest'
     UpdateTemplateContentRequest:
       required:
       - content
@@ -1955,6 +2725,71 @@ components:
         lastUsedAt:
           type: string
           format: date-time
+    UpdateRepositoryRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        url:
+          type: string
+        branch:
+          type: string
+        authType:
+          type: string
+        authConfig:
+          type: object
+          additionalProperties:
+            type: string
+        tags:
+          type: array
+          items:
+            type: string
+        installScript:
+          type: string
+        isActive:
+          type: boolean
+    RepositoryResponse:
+      required:
+      - authType
+      - branch
+      - createdAt
+      - hasInstallScript
+      - id
+      - isActive
+      - name
+      - tags
+      - updatedAt
+      - url
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        url:
+          type: string
+        branch:
+          type: string
+        authType:
+          type: string
+        isActive:
+          type: boolean
+        tags:
+          type: array
+          items:
+            type: string
+        hasInstallScript:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
     Document:
       required:
       - content
@@ -2066,6 +2901,46 @@ components:
           type: array
           items:
             type: string
+    ValidateParameterRequest:
+      required:
+      - parameterName
+      - templateId
+      - value
+      type: object
+      properties:
+        templateId:
+          type: string
+        parameterName:
+          type: string
+        value:
+          type: string
+    CreateCustomTemplateRequest:
+      required:
+      - name
+      - parameters
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        icon:
+          type: string
+        parameters:
+          type: array
+          items:
+            $ref: '#/components/schemas/CreateWorkspaceTemplateParameterRequest'
+        baseTemplateId:
+          type: string
+    CloneTemplateRequest:
+      required:
+      - newName
+      type: object
+      properties:
+        newName:
+          type: string
+        newDescription:
+          type: string
     CreateTaskRequest:
       required:
       - dependsOn
@@ -2137,6 +3012,68 @@ components:
             type: string
         templateConfig:
           $ref: '#/components/schemas/SessionTemplateConfigRequest'
+    CreateRepositoryRequest:
+      required:
+      - authType
+      - branch
+      - name
+      - tags
+      - url
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        url:
+          type: string
+        branch:
+          type: string
+        authType:
+          type: string
+        authConfig:
+          type: object
+          additionalProperties:
+            type: string
+        tags:
+          type: array
+          items:
+            type: string
+        installScript:
+          type: string
+    RepositoryOperationResponse:
+      required:
+      - message
+      - success
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties:
+            type: object
+    CloneRepositoryRequest:
+      required:
+      - targetPath
+      type: object
+      properties:
+        targetPath:
+          type: string
+    GenerateScriptRequest:
+      required:
+      - templateName
+      - variables
+      type: object
+      properties:
+        templateName:
+          type: string
+        variables:
+          type: object
+          additionalProperties:
+            type: string
     RefreshTokenRequest:
       required:
       - refreshToken
@@ -2307,6 +3244,66 @@ components:
         buildCompletedAt:
           type: string
           format: date-time
+    RepositoryDetailResponse:
+      required:
+      - authConfigPresent
+      - authType
+      - branch
+      - createdAt
+      - id
+      - isActive
+      - name
+      - tags
+      - updatedAt
+      - url
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        url:
+          type: string
+        branch:
+          type: string
+        authType:
+          type: string
+        authConfigPresent:
+          type: boolean
+        isActive:
+          type: boolean
+        tags:
+          type: array
+          items:
+            type: string
+        installScript:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    InstallScriptTemplateResponse:
+      required:
+      - description
+      - name
+      - template
+      - variables
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        template:
+          type: string
+        variables:
+          type: array
+          items:
+            type: string
     CoderTemplateResponse:
       required:
       - active_version_id
