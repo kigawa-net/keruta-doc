@@ -22,6 +22,8 @@ tags:
   description: リポジトリ管理API
 - name: Default Templates
   description: Default workspace template management API
+- name: Kubernetes Config
+  description: Kubernetes設定管理API
 - name: Authentication
   description: Authentication API (Disabled)
 - name: Task
@@ -540,6 +542,97 @@ paths:
                 type: object
                 additionalProperties:
                   type: string
+  /api/v1/kubernetes/configs/{id}:
+    get:
+      tags:
+      - Kubernetes Config
+      summary: Kubernetes設定詳細取得
+      description: 指定されたIDのKubernetes設定を取得
+      operationId: getConfigById
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/KubernetesConfigResponse'
+    put:
+      tags:
+      - Kubernetes Config
+      summary: Kubernetes設定更新
+      description: 既存のKubernetes設定を更新
+      operationId: updateConfig
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateKubernetesConfigRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/KubernetesConfigResponse'
+    delete:
+      tags:
+      - Kubernetes Config
+      summary: Kubernetes設定削除
+      description: 指定されたKubernetes設定を削除
+      operationId: deleteConfig
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
+  /api/v1/kubernetes/configs/{id}/toggle:
+    put:
+      tags:
+      - Kubernetes Config
+      summary: Kubernetes設定の有効/無効切り替え
+      description: 指定されたKubernetes設定の有効/無効を切り替え
+      operationId: toggleConfigStatus
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: isActive
+        in: query
+        required: true
+        schema:
+          type: boolean
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/KubernetesConfigResponse'
   /api/v1/documents/{id}:
     get:
       tags:
@@ -600,6 +693,90 @@ paths:
       responses:
         "200":
           description: OK
+  /api/v1/agents/{id}:
+    get:
+      tags:
+      - agent-controller
+      operationId: getAgentById
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/AgentResponse'
+    put:
+      tags:
+      - agent-controller
+      operationId: updateAgent
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAgentRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/AgentResponse'
+    delete:
+      tags:
+      - agent-controller
+      operationId: deregisterAgent
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+  /api/v1/agents/{id}/status:
+    put:
+      tags:
+      - agent-controller
+      operationId: updateAgentStatus
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAgentStatusRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/AgentResponse'
   /api/v1/workspaces:
     get:
       tags:
@@ -1419,6 +1596,142 @@ paths:
                 type: object
                 additionalProperties:
                   type: string
+  /api/v1/kubernetes/configs:
+    get:
+      tags:
+      - Kubernetes Config
+      summary: Kubernetes設定一覧取得
+      description: 全てのKubernetes設定を取得
+      operationId: getAllConfigs
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/KubernetesConfigResponse'
+    post:
+      tags:
+      - Kubernetes Config
+      summary: Kubernetes設定作成
+      description: 新しいKubernetes設定を作成
+      operationId: createConfig
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateKubernetesConfigRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/KubernetesConfigResponse'
+  /api/v1/kubernetes/configs/{id}/test-connection:
+    post:
+      tags:
+      - Kubernetes Config
+      summary: Kubernetes接続テスト
+      description: 指定されたKubernetes設定での接続テストを実行
+      operationId: testConnection
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/KubernetesConnectionTestResultDto'
+  /api/v1/kubernetes/configs/{id}/resources:
+    get:
+      tags:
+      - Kubernetes Config
+      summary: ネームスペースリソース取得
+      description: 指定されたKubernetes設定でネームスペース内のリソース一覧を取得
+      operationId: getNamespaceResources
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: resourceType
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/KubernetesResourceInfoDto'
+    post:
+      tags:
+      - Kubernetes Config
+      summary: リソース作成
+      description: 指定されたKubernetes設定でリソースを作成
+      operationId: createResource
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateKubernetesResourceRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/KubernetesResourceInfoDto'
+  /api/v1/kubernetes/configs/import:
+    post:
+      tags:
+      - Kubernetes Config
+      summary: Kubernetes設定インポート
+      description: JSON形式のKubernetes設定をインポート
+      operationId: importConfig
+      parameters:
+      - name: overwriteExisting
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties:
+                type: object
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/KubernetesConfigResponse'
   /api/v1/integration/tasks/{taskId}/execute:
     post:
       tags:
@@ -1517,6 +1830,203 @@ paths:
             '*/*':
               schema:
                 $ref: '#/components/schemas/TokenResponse'
+  /api/v1/agents/{id}/unassign-task:
+    post:
+      tags:
+      - agent-controller
+      operationId: unassignTask
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/AgentResponse'
+  /api/v1/agents/{id}/stop:
+    post:
+      tags:
+      - agent-controller
+      operationId: stopAgent
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+  /api/v1/agents/{id}/restart:
+    post:
+      tags:
+      - agent-controller
+      operationId: restartAgent
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+  /api/v1/agents/{id}/heartbeat:
+    post:
+      tags:
+      - agent-controller
+      operationId: processHeartbeat
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentHeartbeatRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/AgentResponse'
+  /api/v1/agents/{id}/health-check:
+    post:
+      tags:
+      - agent-controller
+      operationId: performHealthCheck
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/AgentHealthCheckResponse'
+  /api/v1/agents/{id}/execute:
+    post:
+      tags:
+      - agent-controller
+      operationId: executeCommand
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExecuteAgentCommandRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/AgentCommandResultResponse'
+  /api/v1/agents/{id}/assign-task:
+    post:
+      tags:
+      - agent-controller
+      operationId: assignTask
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: taskId
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: workspaceId
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: sessionId
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/AgentResponse'
+  /api/v1/agents/register:
+    post:
+      tags:
+      - agent-controller
+      operationId: registerAgent
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterAgentRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/AgentResponse'
+  /api/v1/agents/cleanup-stale:
+    post:
+      tags:
+      - agent-controller
+      operationId: cleanupStaleAgents
+      parameters:
+      - name: staleThresholdMinutes
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int64
+          default: 10
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AgentResponse'
   /api/v1/workspaces/{id}:
     get:
       tags:
@@ -1980,6 +2490,156 @@ paths:
                 type: object
                 additionalProperties:
                   type: object
+  /api/v1/kubernetes/configs/{id}/export:
+    get:
+      tags:
+      - Kubernetes Config
+      summary: Kubernetes設定エクスポート
+      description: 指定されたKubernetes設定をJSON形式でエクスポート
+      operationId: exportConfig
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+  /api/v1/kubernetes/configs/{id}/cluster-info:
+    get:
+      tags:
+      - Kubernetes Config
+      summary: クラスター情報取得
+      description: 指定されたKubernetes設定でクラスター情報を取得
+      operationId: getClusterInfo
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/KubernetesClusterInfoDto'
+  /api/v1/kubernetes/configs/tags:
+    get:
+      tags:
+      - Kubernetes Config
+      summary: 全タグ取得
+      description: 使用されている全てのタグを取得
+      operationId: getAllTags
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  type: string
+  /api/v1/kubernetes/configs/stats:
+    get:
+      tags:
+      - Kubernetes Config
+      summary: Kubernetes設定統計情報取得
+      description: Kubernetes設定の統計情報を取得
+      operationId: getConfigStats
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+  /api/v1/kubernetes/configs/search:
+    get:
+      tags:
+      - Kubernetes Config
+      summary: Kubernetes設定検索
+      description: 名前パターンでKubernetes設定を検索
+      operationId: searchConfigs
+      parameters:
+      - name: pattern
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/KubernetesConfigResponse'
+  /api/v1/kubernetes/configs/health:
+    get:
+      tags:
+      - Kubernetes Config
+      summary: Kubernetes設定管理ヘルスチェック
+      description: Kubernetes設定管理システムのヘルスチェック
+      operationId: healthCheck_2
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+  /api/v1/kubernetes/configs/by-tag/{tag}:
+    get:
+      tags:
+      - Kubernetes Config
+      summary: タグでKubernetes設定検索
+      description: 指定されたタグでKubernetes設定を検索
+      operationId: getConfigsByTag
+      parameters:
+      - name: tag
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/KubernetesConfigResponse'
+  /api/v1/kubernetes/configs/active:
+    get:
+      tags:
+      - Kubernetes Config
+      summary: アクティブなKubernetes設定取得
+      description: アクティブなKubernetes設定のみを取得
+      operationId: getActiveConfigs
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/KubernetesConfigResponse'
   /api/v1/integration/tasks/{taskId}/execution-info:
     get:
       tags:
@@ -2024,7 +2684,7 @@ paths:
       - Workspace-Task Integration
       summary: Integration health check
       description: Health check for workspace-task integration services
-      operationId: healthCheck_2
+      operationId: healthCheck_3
       responses:
         "200":
           description: OK
@@ -2107,6 +2767,128 @@ paths:
             '*/*':
               schema:
                 $ref: '#/components/schemas/CoderTemplateResponse'
+  /api/v1/agents:
+    get:
+      tags:
+      - agent-controller
+      operationId: getAllAgents
+      parameters:
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: workspaceId
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: sessionId
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: capability
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: tag
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AgentResponse'
+  /api/v1/agents/{id}/logs:
+    get:
+      tags:
+      - agent-controller
+      operationId: getAgentLogs
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: lines
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 100
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  type: string
+  /api/v1/agents/statistics:
+    get:
+      tags:
+      - agent-controller
+      operationId: getAgentStatistics
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/AgentStatisticsSummaryResponse'
+  /api/v1/agents/online:
+    get:
+      tags:
+      - agent-controller
+      operationId: getOnlineAgents
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AgentResponse'
+  /api/v1/agents/available:
+    get:
+      tags:
+      - agent-controller
+      operationId: getAvailableAgents
+      parameters:
+      - name: capabilities
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+      - name: tags
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AgentResponse'
   /api/v1/sessions/{id}/tags/{tag}:
     delete:
       tags:
@@ -2132,6 +2914,38 @@ paths:
             '*/*':
               schema:
                 $ref: '#/components/schemas/SessionResponse'
+  /api/v1/kubernetes/configs/{id}/resources/{resourceType}/{resourceName}:
+    delete:
+      tags:
+      - Kubernetes Config
+      summary: リソース削除
+      description: 指定されたKubernetes設定でリソースを削除
+      operationId: deleteResource
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: resourceType
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: resourceName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
 components:
   schemas:
     WorkspaceBuildInfoResponse:
@@ -2790,6 +3604,114 @@ components:
         updatedAt:
           type: string
           format: date-time
+    KubernetesAuthConfigDto:
+      required:
+      - type
+      type: object
+      properties:
+        type:
+          type: string
+        token:
+          type: string
+        caCertificate:
+          type: string
+        configContent:
+          type: string
+        context:
+          type: string
+        clientId:
+          type: string
+        clientSecret:
+          type: string
+        tokenUrl:
+          type: string
+        scope:
+          type: string
+        clientCertificate:
+          type: string
+        clientKey:
+          type: string
+    KubernetesResourceLimitsDto:
+      type: object
+      properties:
+        cpuLimit:
+          type: string
+        memoryLimit:
+          type: string
+        storageLimit:
+          type: string
+        maxPods:
+          type: integer
+          format: int32
+        maxServices:
+          type: integer
+          format: int32
+        maxConfigMaps:
+          type: integer
+          format: int32
+        maxSecrets:
+          type: integer
+          format: int32
+    UpdateKubernetesConfigRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        clusterUrl:
+          type: string
+        namespace:
+          type: string
+        authType:
+          type: string
+        authConfig:
+          $ref: '#/components/schemas/KubernetesAuthConfigDto'
+        tags:
+          type: array
+          items:
+            type: string
+        resourceLimits:
+          $ref: '#/components/schemas/KubernetesResourceLimitsDto'
+    KubernetesConfigResponse:
+      required:
+      - authType
+      - clusterUrl
+      - createdAt
+      - id
+      - isActive
+      - name
+      - namespace
+      - tags
+      - updatedAt
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        clusterUrl:
+          type: string
+        namespace:
+          type: string
+        authType:
+          type: string
+        isActive:
+          type: boolean
+        tags:
+          type: array
+          items:
+            type: string
+        resourceLimits:
+          $ref: '#/components/schemas/KubernetesResourceLimitsDto'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
     Document:
       required:
       - content
@@ -2815,6 +3737,232 @@ components:
         updatedAt:
           type: string
           format: date-time
+    AgentConfigurationRequest:
+      required:
+      - customProperties
+      - enableHealthCheck
+      - enableLogStreaming
+      - heartbeatIntervalSeconds
+      - logLevel
+      - maxConcurrentTasks
+      - retryAttempts
+      - timeoutSeconds
+      type: object
+      properties:
+        maxConcurrentTasks:
+          type: integer
+          format: int32
+        heartbeatIntervalSeconds:
+          type: integer
+          format: int32
+        logLevel:
+          type: string
+        timeoutSeconds:
+          type: integer
+          format: int32
+        retryAttempts:
+          type: integer
+          format: int32
+        enableHealthCheck:
+          type: boolean
+        enableLogStreaming:
+          type: boolean
+        customProperties:
+          type: object
+          additionalProperties:
+            type: string
+    UpdateAgentRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        tags:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+        metadata:
+          type: object
+          additionalProperties:
+            type: object
+        configuration:
+          $ref: '#/components/schemas/AgentConfigurationRequest'
+    AgentConfigurationResponse:
+      required:
+      - customProperties
+      - enableHealthCheck
+      - enableLogStreaming
+      - heartbeatIntervalSeconds
+      - logLevel
+      - maxConcurrentTasks
+      - retryAttempts
+      - timeoutSeconds
+      type: object
+      properties:
+        maxConcurrentTasks:
+          type: integer
+          format: int32
+        heartbeatIntervalSeconds:
+          type: integer
+          format: int32
+        logLevel:
+          type: string
+        timeoutSeconds:
+          type: integer
+          format: int32
+        retryAttempts:
+          type: integer
+          format: int32
+        enableHealthCheck:
+          type: boolean
+        enableLogStreaming:
+          type: boolean
+        customProperties:
+          type: object
+          additionalProperties:
+            type: string
+    AgentResourceUsageResponse:
+      required:
+      - cpuUsagePercent
+      - diskUsagePercent
+      - memoryUsagePercent
+      - networkBytesIn
+      - networkBytesOut
+      type: object
+      properties:
+        cpuUsagePercent:
+          type: number
+          format: double
+        memoryUsagePercent:
+          type: number
+          format: double
+        diskUsagePercent:
+          type: number
+          format: double
+        networkBytesIn:
+          type: integer
+          format: int64
+        networkBytesOut:
+          type: integer
+          format: int64
+    AgentResponse:
+      required:
+      - capabilities
+      - configuration
+      - hostname
+      - id
+      - ipAddress
+      - metadata
+      - name
+      - port
+      - registeredAt
+      - statistics
+      - status
+      - tags
+      - updatedAt
+      - version
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        hostname:
+          type: string
+        ipAddress:
+          type: string
+        port:
+          type: integer
+          format: int32
+        version:
+          type: string
+        status:
+          type: string
+        capabilities:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+        workspaceId:
+          type: string
+        sessionId:
+          type: string
+        currentTaskId:
+          type: string
+        lastHeartbeat:
+          type: string
+          format: date-time
+        registeredAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        tags:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+        metadata:
+          type: object
+          additionalProperties:
+            type: object
+        configuration:
+          $ref: '#/components/schemas/AgentConfigurationResponse'
+        statistics:
+          $ref: '#/components/schemas/AgentStatisticsResponse'
+    AgentStatisticsResponse:
+      required:
+      - averageTaskDurationSeconds
+      - failedTasks
+      - resourceUsage
+      - successfulTasks
+      - totalTasksExecuted
+      - uptime
+      type: object
+      properties:
+        totalTasksExecuted:
+          type: integer
+          format: int64
+        successfulTasks:
+          type: integer
+          format: int64
+        failedTasks:
+          type: integer
+          format: int64
+        averageTaskDurationSeconds:
+          type: number
+          format: double
+        uptime:
+          type: integer
+          format: int64
+        lastError:
+          type: string
+        lastErrorTime:
+          type: string
+          format: date-time
+        resourceUsage:
+          $ref: '#/components/schemas/AgentResourceUsageResponse'
+    UpdateAgentStatusRequest:
+      required:
+      - agentStatus
+      - status
+      type: object
+      properties:
+        status:
+          type: string
+        agentStatus:
+          type: string
+          enum:
+          - OFFLINE
+          - ONLINE
+          - BUSY
+          - ERROR
+          - MAINTENANCE
     CreateWorkspaceRequest:
       required:
       - automaticUpdates
@@ -3074,6 +4222,105 @@ components:
           type: object
           additionalProperties:
             type: string
+    CreateKubernetesConfigRequest:
+      required:
+      - authConfig
+      - authType
+      - clusterUrl
+      - name
+      - namespace
+      - tags
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        clusterUrl:
+          type: string
+        namespace:
+          type: string
+        authType:
+          type: string
+        authConfig:
+          $ref: '#/components/schemas/KubernetesAuthConfigDto'
+        tags:
+          type: array
+          items:
+            type: string
+        resourceLimits:
+          $ref: '#/components/schemas/KubernetesResourceLimitsDto'
+    KubernetesConnectionTestResultDto:
+      required:
+      - availableResources
+      - message
+      - responseTimeMs
+      - status
+      - testedAt
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        responseTimeMs:
+          type: integer
+          format: int64
+        serverVersion:
+          type: string
+        availableResources:
+          type: array
+          items:
+            type: string
+        testedAt:
+          type: string
+          format: date-time
+    CreateKubernetesResourceRequest:
+      required:
+      - resourceSpec
+      - resourceType
+      type: object
+      properties:
+        resourceType:
+          type: string
+        resourceSpec:
+          type: object
+          additionalProperties:
+            type: object
+    KubernetesResourceInfoDto:
+      required:
+      - annotations
+      - createdAt
+      - labels
+      - name
+      - resourceType
+      - spec
+      - status
+      type: object
+      properties:
+        resourceType:
+          type: string
+        name:
+          type: string
+        namespace:
+          type: string
+        status:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        labels:
+          type: object
+          additionalProperties:
+            type: string
+        annotations:
+          type: object
+          additionalProperties:
+            type: string
+        spec:
+          type: object
+          additionalProperties:
+            type: object
     RefreshTokenRequest:
       required:
       - refreshToken
@@ -3104,6 +4351,210 @@ components:
           type: string
         password:
           type: string
+    AgentHeartbeatRequest:
+      required:
+      - agentId
+      - resourceUsage
+      - statistics
+      - status
+      type: object
+      properties:
+        agentId:
+          type: string
+        status:
+          type: string
+        currentTaskId:
+          type: string
+        statistics:
+          $ref: '#/components/schemas/AgentStatisticsRequest'
+        resourceUsage:
+          $ref: '#/components/schemas/AgentResourceUsageRequest'
+    AgentResourceUsageRequest:
+      required:
+      - cpuUsagePercent
+      - diskUsagePercent
+      - memoryUsagePercent
+      - networkBytesIn
+      - networkBytesOut
+      type: object
+      properties:
+        cpuUsagePercent:
+          type: number
+          format: double
+        memoryUsagePercent:
+          type: number
+          format: double
+        diskUsagePercent:
+          type: number
+          format: double
+        networkBytesIn:
+          type: integer
+          format: int64
+        networkBytesOut:
+          type: integer
+          format: int64
+    AgentStatisticsRequest:
+      required:
+      - averageTaskDurationSeconds
+      - failedTasks
+      - resourceUsage
+      - successfulTasks
+      - totalTasksExecuted
+      - uptime
+      type: object
+      properties:
+        totalTasksExecuted:
+          type: integer
+          format: int64
+        successfulTasks:
+          type: integer
+          format: int64
+        failedTasks:
+          type: integer
+          format: int64
+        averageTaskDurationSeconds:
+          type: number
+          format: double
+        uptime:
+          type: integer
+          format: int64
+        lastError:
+          type: string
+        lastErrorTime:
+          type: string
+          format: date-time
+        resourceUsage:
+          $ref: '#/components/schemas/AgentResourceUsageRequest'
+    AgentHealthCheckResponse:
+      required:
+      - agentId
+      - checks
+      - message
+      - responseTimeMs
+      - status
+      - timestamp
+      type: object
+      properties:
+        agentId:
+          type: string
+        status:
+          type: string
+        message:
+          type: string
+        responseTimeMs:
+          type: integer
+          format: int64
+        checks:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/HealthCheckDetailResponse'
+        timestamp:
+          type: string
+          format: date-time
+    HealthCheckDetailResponse:
+      required:
+      - duration
+      - message
+      - name
+      - status
+      type: object
+      properties:
+        name:
+          type: string
+        status:
+          type: string
+        message:
+          type: string
+        duration:
+          type: integer
+          format: int64
+    ExecuteAgentCommandRequest:
+      required:
+      - args
+      - command
+      type: object
+      properties:
+        command:
+          type: string
+        args:
+          type: array
+          items:
+            type: string
+    AgentCommandResultResponse:
+      required:
+      - agentId
+      - args
+      - command
+      - duration
+      - exitCode
+      - stderr
+      - stdout
+      - timestamp
+      type: object
+      properties:
+        agentId:
+          type: string
+        command:
+          type: string
+        args:
+          type: array
+          items:
+            type: string
+        exitCode:
+          type: integer
+          format: int32
+        stdout:
+          type: string
+        stderr:
+          type: string
+        duration:
+          type: integer
+          format: int64
+        timestamp:
+          type: string
+          format: date-time
+    RegisterAgentRequest:
+      required:
+      - capabilities
+      - configuration
+      - hostname
+      - ipAddress
+      - metadata
+      - name
+      - port
+      - tags
+      - version
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        hostname:
+          type: string
+        ipAddress:
+          type: string
+        port:
+          type: integer
+          format: int32
+        version:
+          type: string
+        capabilities:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+        tags:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+        metadata:
+          type: object
+          additionalProperties:
+            type: object
+        configuration:
+          $ref: '#/components/schemas/AgentConfigurationRequest'
     TemplateContentResponse:
       required:
       - content
@@ -3304,6 +4755,37 @@ components:
           type: array
           items:
             type: string
+    KubernetesClusterInfoDto:
+      required:
+      - availableResources
+      - clusterRoles
+      - namespaces
+      - nodeCount
+      - serverVersion
+      - storageClasses
+      type: object
+      properties:
+        serverVersion:
+          type: string
+        nodeCount:
+          type: integer
+          format: int32
+        namespaces:
+          type: array
+          items:
+            type: string
+        availableResources:
+          type: array
+          items:
+            type: string
+        clusterRoles:
+          type: array
+          items:
+            type: string
+        storageClasses:
+          type: array
+          items:
+            type: string
     CoderTemplateResponse:
       required:
       - active_version_id
@@ -3358,3 +4840,43 @@ components:
           format: int32
         deprecated:
           type: boolean
+    AgentStatisticsSummaryResponse:
+      required:
+      - averageResponseTime
+      - busyAgents
+      - errorAgents
+      - failedTasks
+      - offlineAgents
+      - onlineAgents
+      - successfulTasks
+      - totalAgents
+      - totalTasksExecuted
+      type: object
+      properties:
+        totalAgents:
+          type: integer
+          format: int64
+        onlineAgents:
+          type: integer
+          format: int64
+        busyAgents:
+          type: integer
+          format: int64
+        offlineAgents:
+          type: integer
+          format: int64
+        errorAgents:
+          type: integer
+          format: int64
+        totalTasksExecuted:
+          type: integer
+          format: int64
+        successfulTasks:
+          type: integer
+          format: int64
+        failedTasks:
+          type: integer
+          format: int64
+        averageResponseTime:
+          type: number
+          format: double
