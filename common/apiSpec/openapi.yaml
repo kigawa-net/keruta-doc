@@ -814,6 +814,46 @@ paths:
             '*/*':
               schema:
                 $ref: '#/components/schemas/WorkspaceResponse'
+  /api/v1/workspaces/{workspaceId}/monitoring/stop:
+    post:
+      tags:
+      - workspace-monitoring-controller
+      operationId: stopMonitoring
+      parameters:
+      - name: workspaceId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+  /api/v1/workspaces/{workspaceId}/monitoring/start:
+    post:
+      tags:
+      - workspace-monitoring-controller
+      operationId: startMonitoring
+      parameters:
+      - name: workspaceId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
   /api/v1/workspaces/{id}/stop:
     post:
       tags:
@@ -2053,6 +2093,250 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/AgentResponse'
+  /api/v1/workspaces/{workspaceId}/resources:
+    get:
+      tags:
+      - workspace-log-controller
+      operationId: getWorkspaceResourceUsage
+      parameters:
+      - name: workspaceId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+  /api/v1/workspaces/{workspaceId}/monitoring/overview:
+    get:
+      tags:
+      - workspace-monitoring-controller
+      operationId: getMonitoringOverview
+      parameters:
+      - name: workspaceId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+  /api/v1/workspaces/{workspaceId}/metrics/history:
+    get:
+      tags:
+      - workspace-monitoring-controller
+      operationId: getHistoricalMetrics
+      parameters:
+      - name: workspaceId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: hours
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 24
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+  /api/v1/workspaces/{workspaceId}/logs:
+    get:
+      tags:
+      - workspace-log-controller
+      operationId: getWorkspaceLogs
+      parameters:
+      - name: workspaceId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: lines
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 100
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+  /api/v1/workspaces/{workspaceId}/logs/stream:
+    get:
+      tags:
+      - workspace-log-controller
+      operationId: streamWorkspaceLogs
+      parameters:
+      - name: workspaceId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            text/event-stream:
+              schema:
+                $ref: '#/components/schemas/SseEmitter'
+  /api/v1/workspaces/{workspaceId}/insights:
+    get:
+      tags:
+      - workspace-monitoring-controller
+      operationId: getPerformanceInsights
+      parameters:
+      - name: workspaceId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+  /api/v1/workspaces/{workspaceId}/health:
+    get:
+      tags:
+      - workspace-monitoring-controller
+      operationId: getWorkspaceHealth
+      parameters:
+      - name: workspaceId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+  /api/v1/workspaces/{workspaceId}/events:
+    get:
+      tags:
+      - workspace-log-controller
+      operationId: getWorkspaceEvents
+      parameters:
+      - name: workspaceId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 50
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+  /api/v1/workspaces/{workspaceId}/dashboard:
+    get:
+      tags:
+      - workspace-log-controller
+      operationId: getWorkspaceDashboard
+      parameters:
+      - name: workspaceId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+  /api/v1/workspaces/{workspaceId}/builds/{buildId}/logs:
+    get:
+      tags:
+      - workspace-log-controller
+      operationId: getWorkspaceBuildLogs
+      parameters:
+      - name: workspaceId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: buildId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+  /api/v1/workspaces/{workspaceId}/builds/latest/logs:
+    get:
+      tags:
+      - workspace-log-controller
+      operationId: getLatestWorkspaceBuildLogs
+      parameters:
+      - name: workspaceId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
   /api/v1/workspaces/{id}:
     get:
       tags:
@@ -2102,6 +2386,20 @@ paths:
             '*/*':
               schema:
                 $ref: '#/components/schemas/WorkspaceResponse'
+  /api/v1/workspaces/monitoring/status:
+    get:
+      tags:
+      - workspace-monitoring-controller
+      operationId: getMonitoringStatus
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
   /api/v1/templates/default:
     get:
       tags:
@@ -4641,6 +4939,12 @@ components:
             type: object
         configuration:
           $ref: '#/components/schemas/AgentConfigurationRequest'
+    SseEmitter:
+      type: object
+      properties:
+        timeout:
+          type: integer
+          format: int64
     TemplateContentResponse:
       required:
       - content
@@ -4781,12 +5085,6 @@ components:
         buildCompletedAt:
           type: string
           format: date-time
-    SseEmitter:
-      type: object
-      properties:
-        timeout:
-          type: integer
-          format: int64
     RepositoryDetailResponse:
       required:
       - authConfigPresent
