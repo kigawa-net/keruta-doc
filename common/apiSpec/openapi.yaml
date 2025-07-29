@@ -3813,7 +3813,6 @@ components:
             type: string
     UpdateSessionRequest:
       required:
-      - metadata
       - name
       - status
       - tags
@@ -3829,17 +3828,12 @@ components:
           type: array
           items:
             type: string
-        metadata:
-          type: object
-          additionalProperties:
-            type: string
         templateConfig:
           $ref: '#/components/schemas/SessionTemplateConfigRequest'
     SessionResponse:
       required:
       - createdAt
       - id
-      - metadata
       - name
       - status
       - tags
@@ -3858,10 +3852,6 @@ components:
         tags:
           type: array
           items:
-            type: string
-        metadata:
-          type: object
-          additionalProperties:
             type: string
         templateConfig:
           $ref: '#/components/schemas/SessionTemplateConfigResponse'
@@ -4522,7 +4512,6 @@ components:
             type: string
     CreateSessionRequest:
       required:
-      - metadata
       - name
       - status
       - tags
@@ -4537,10 +4526,6 @@ components:
         tags:
           type: array
           items:
-            type: string
-        metadata:
-          type: object
-          additionalProperties:
             type: string
         templateConfig:
           $ref: '#/components/schemas/SessionTemplateConfigRequest'
@@ -4956,7 +4941,6 @@ components:
       required:
       - createdAt
       - id
-      - metadata
       - name
       - status
       - tags
@@ -4976,10 +4960,6 @@ components:
         tags:
           type: array
           items:
-            type: string
-        metadata:
-          type: object
-          additionalProperties:
             type: string
         createdAt:
           type: string
