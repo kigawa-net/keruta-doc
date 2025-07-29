@@ -22,8 +22,6 @@ tags:
   description: リポジトリ管理API
 - name: Default Templates
   description: Default workspace template management API
-- name: Kubernetes Config
-  description: Kubernetes設定管理API
 - name: Authentication
   description: Authentication API (Disabled)
 - name: Task
@@ -412,7 +410,7 @@ paths:
       tags:
       - Session
       summary: Update session
-      description: Updates an existing session
+      description: Updates an existing session (status changes are not allowed)
       operationId: updateSession
       parameters:
       - name: id
@@ -453,7 +451,7 @@ paths:
       tags:
       - Session
       summary: Update session status
-      description: Updates the status of a specific session
+      description: Internal API - Status updates are managed by the system
       operationId: updateSessionStatus
       parameters:
       - name: id
@@ -475,7 +473,9 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: '#/components/schemas/SessionResponse'
+                type: object
+                additionalProperties:
+                  type: string
   /api/v1/repositories/{id}:
     get:
       tags:
@@ -542,97 +542,6 @@ paths:
                 type: object
                 additionalProperties:
                   type: string
-  /api/v1/kubernetes/configs/{id}:
-    get:
-      tags:
-      - Kubernetes Config
-      summary: Kubernetes設定詳細取得
-      description: 指定されたIDのKubernetes設定を取得
-      operationId: getConfigById
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/KubernetesConfigResponse'
-    put:
-      tags:
-      - Kubernetes Config
-      summary: Kubernetes設定更新
-      description: 既存のKubernetes設定を更新
-      operationId: updateConfig
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateKubernetesConfigRequest'
-        required: true
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/KubernetesConfigResponse'
-    delete:
-      tags:
-      - Kubernetes Config
-      summary: Kubernetes設定削除
-      description: 指定されたKubernetes設定を削除
-      operationId: deleteConfig
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                type: object
-                additionalProperties:
-                  type: string
-  /api/v1/kubernetes/configs/{id}/toggle:
-    put:
-      tags:
-      - Kubernetes Config
-      summary: Kubernetes設定の有効/無効切り替え
-      description: 指定されたKubernetes設定の有効/無効を切り替え
-      operationId: toggleConfigStatus
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-      - name: isActive
-        in: query
-        required: true
-        schema:
-          type: boolean
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/KubernetesConfigResponse'
   /api/v1/documents/{id}:
     get:
       tags:
@@ -1662,142 +1571,6 @@ paths:
                 type: object
                 additionalProperties:
                   type: string
-  /api/v1/kubernetes/configs:
-    get:
-      tags:
-      - Kubernetes Config
-      summary: Kubernetes設定一覧取得
-      description: 全てのKubernetes設定を取得
-      operationId: getAllConfigs
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/KubernetesConfigResponse'
-    post:
-      tags:
-      - Kubernetes Config
-      summary: Kubernetes設定作成
-      description: 新しいKubernetes設定を作成
-      operationId: createConfig
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateKubernetesConfigRequest'
-        required: true
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/KubernetesConfigResponse'
-  /api/v1/kubernetes/configs/{id}/test-connection:
-    post:
-      tags:
-      - Kubernetes Config
-      summary: Kubernetes接続テスト
-      description: 指定されたKubernetes設定での接続テストを実行
-      operationId: testConnection
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/KubernetesConnectionTestResultDto'
-  /api/v1/kubernetes/configs/{id}/resources:
-    get:
-      tags:
-      - Kubernetes Config
-      summary: ネームスペースリソース取得
-      description: 指定されたKubernetes設定でネームスペース内のリソース一覧を取得
-      operationId: getNamespaceResources
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-      - name: resourceType
-        in: query
-        required: false
-        schema:
-          type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/KubernetesResourceInfoDto'
-    post:
-      tags:
-      - Kubernetes Config
-      summary: リソース作成
-      description: 指定されたKubernetes設定でリソースを作成
-      operationId: createResource
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateKubernetesResourceRequest'
-        required: true
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/KubernetesResourceInfoDto'
-  /api/v1/kubernetes/configs/import:
-    post:
-      tags:
-      - Kubernetes Config
-      summary: Kubernetes設定インポート
-      description: JSON形式のKubernetes設定をインポート
-      operationId: importConfig
-      parameters:
-      - name: overwriteExisting
-        in: query
-        required: false
-        schema:
-          type: boolean
-          default: false
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              additionalProperties:
-                type: object
-        required: true
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/KubernetesConfigResponse'
   /api/v1/integration/tasks/{taskId}/execute:
     post:
       tags:
@@ -2874,156 +2647,6 @@ paths:
                 type: object
                 additionalProperties:
                   type: object
-  /api/v1/kubernetes/configs/{id}/export:
-    get:
-      tags:
-      - Kubernetes Config
-      summary: Kubernetes設定エクスポート
-      description: 指定されたKubernetes設定をJSON形式でエクスポート
-      operationId: exportConfig
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                type: object
-                additionalProperties:
-                  type: object
-  /api/v1/kubernetes/configs/{id}/cluster-info:
-    get:
-      tags:
-      - Kubernetes Config
-      summary: クラスター情報取得
-      description: 指定されたKubernetes設定でクラスター情報を取得
-      operationId: getClusterInfo
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/KubernetesClusterInfoDto'
-  /api/v1/kubernetes/configs/tags:
-    get:
-      tags:
-      - Kubernetes Config
-      summary: 全タグ取得
-      description: 使用されている全てのタグを取得
-      operationId: getAllTags
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                type: array
-                items:
-                  type: string
-  /api/v1/kubernetes/configs/stats:
-    get:
-      tags:
-      - Kubernetes Config
-      summary: Kubernetes設定統計情報取得
-      description: Kubernetes設定の統計情報を取得
-      operationId: getConfigStats
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                type: object
-                additionalProperties:
-                  type: object
-  /api/v1/kubernetes/configs/search:
-    get:
-      tags:
-      - Kubernetes Config
-      summary: Kubernetes設定検索
-      description: 名前パターンでKubernetes設定を検索
-      operationId: searchConfigs
-      parameters:
-      - name: pattern
-        in: query
-        required: true
-        schema:
-          type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/KubernetesConfigResponse'
-  /api/v1/kubernetes/configs/health:
-    get:
-      tags:
-      - Kubernetes Config
-      summary: Kubernetes設定管理ヘルスチェック
-      description: Kubernetes設定管理システムのヘルスチェック
-      operationId: healthCheck_2
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                type: object
-                additionalProperties:
-                  type: object
-  /api/v1/kubernetes/configs/by-tag/{tag}:
-    get:
-      tags:
-      - Kubernetes Config
-      summary: タグでKubernetes設定検索
-      description: 指定されたタグでKubernetes設定を検索
-      operationId: getConfigsByTag
-      parameters:
-      - name: tag
-        in: path
-        required: true
-        schema:
-          type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/KubernetesConfigResponse'
-  /api/v1/kubernetes/configs/active:
-    get:
-      tags:
-      - Kubernetes Config
-      summary: アクティブなKubernetes設定取得
-      description: アクティブなKubernetes設定のみを取得
-      operationId: getActiveConfigs
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/KubernetesConfigResponse'
   /api/v1/integration/tasks/{taskId}/execution-info:
     get:
       tags:
@@ -3068,7 +2691,7 @@ paths:
       - Workspace-Task Integration
       summary: Integration health check
       description: Health check for workspace-task integration services
-      operationId: healthCheck_3
+      operationId: healthCheck_2
       responses:
         "200":
           description: OK
@@ -3298,38 +2921,6 @@ paths:
             '*/*':
               schema:
                 $ref: '#/components/schemas/SessionResponse'
-  /api/v1/kubernetes/configs/{id}/resources/{resourceType}/{resourceName}:
-    delete:
-      tags:
-      - Kubernetes Config
-      summary: リソース削除
-      description: 指定されたKubernetes設定でリソースを削除
-      operationId: deleteResource
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-      - name: resourceType
-        in: path
-        required: true
-        schema:
-          type: string
-      - name: resourceName
-        in: path
-        required: true
-        schema:
-          type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                type: object
-                additionalProperties:
-                  type: string
 components:
   schemas:
     WorkspaceBuildInfoResponse:
@@ -3374,11 +2965,11 @@ components:
         diskGb:
           type: integer
           format: int64
-        kubernetesNamespace:
+        namespace:
           type: string
-        persistentVolumeClaimName:
+        volumeClaimName:
           type: string
-        podName:
+        containerName:
           type: string
         serviceName:
           type: string
@@ -3814,15 +3405,12 @@ components:
     UpdateSessionRequest:
       required:
       - name
-      - status
       - tags
       type: object
       properties:
         name:
           type: string
         description:
-          type: string
-        status:
           type: string
         tags:
           type: array
@@ -3972,114 +3560,6 @@ components:
             type: string
         hasInstallScript:
           type: boolean
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
-    KubernetesAuthConfigDto:
-      required:
-      - type
-      type: object
-      properties:
-        type:
-          type: string
-        token:
-          type: string
-        caCertificate:
-          type: string
-        configContent:
-          type: string
-        context:
-          type: string
-        clientId:
-          type: string
-        clientSecret:
-          type: string
-        tokenUrl:
-          type: string
-        scope:
-          type: string
-        clientCertificate:
-          type: string
-        clientKey:
-          type: string
-    KubernetesResourceLimitsDto:
-      type: object
-      properties:
-        cpuLimit:
-          type: string
-        memoryLimit:
-          type: string
-        storageLimit:
-          type: string
-        maxPods:
-          type: integer
-          format: int32
-        maxServices:
-          type: integer
-          format: int32
-        maxConfigMaps:
-          type: integer
-          format: int32
-        maxSecrets:
-          type: integer
-          format: int32
-    UpdateKubernetesConfigRequest:
-      type: object
-      properties:
-        name:
-          type: string
-        description:
-          type: string
-        clusterUrl:
-          type: string
-        namespace:
-          type: string
-        authType:
-          type: string
-        authConfig:
-          $ref: '#/components/schemas/KubernetesAuthConfigDto'
-        tags:
-          type: array
-          items:
-            type: string
-        resourceLimits:
-          $ref: '#/components/schemas/KubernetesResourceLimitsDto'
-    KubernetesConfigResponse:
-      required:
-      - authType
-      - clusterUrl
-      - createdAt
-      - id
-      - isActive
-      - name
-      - namespace
-      - tags
-      - updatedAt
-      type: object
-      properties:
-        id:
-          type: string
-        name:
-          type: string
-        description:
-          type: string
-        clusterUrl:
-          type: string
-        namespace:
-          type: string
-        authType:
-          type: string
-        isActive:
-          type: boolean
-        tags:
-          type: array
-          items:
-            type: string
-        resourceLimits:
-          $ref: '#/components/schemas/KubernetesResourceLimitsDto'
         createdAt:
           type: string
           format: date-time
@@ -4513,15 +3993,12 @@ components:
     CreateSessionRequest:
       required:
       - name
-      - status
       - tags
       type: object
       properties:
         name:
           type: string
         description:
-          type: string
-        status:
           type: string
         tags:
           type: array
@@ -4591,105 +4068,6 @@ components:
           type: object
           additionalProperties:
             type: string
-    CreateKubernetesConfigRequest:
-      required:
-      - authConfig
-      - authType
-      - clusterUrl
-      - name
-      - namespace
-      - tags
-      type: object
-      properties:
-        name:
-          type: string
-        description:
-          type: string
-        clusterUrl:
-          type: string
-        namespace:
-          type: string
-        authType:
-          type: string
-        authConfig:
-          $ref: '#/components/schemas/KubernetesAuthConfigDto'
-        tags:
-          type: array
-          items:
-            type: string
-        resourceLimits:
-          $ref: '#/components/schemas/KubernetesResourceLimitsDto'
-    KubernetesConnectionTestResultDto:
-      required:
-      - availableResources
-      - message
-      - responseTimeMs
-      - status
-      - testedAt
-      type: object
-      properties:
-        status:
-          type: string
-        message:
-          type: string
-        responseTimeMs:
-          type: integer
-          format: int64
-        serverVersion:
-          type: string
-        availableResources:
-          type: array
-          items:
-            type: string
-        testedAt:
-          type: string
-          format: date-time
-    CreateKubernetesResourceRequest:
-      required:
-      - resourceSpec
-      - resourceType
-      type: object
-      properties:
-        resourceType:
-          type: string
-        resourceSpec:
-          type: object
-          additionalProperties:
-            type: object
-    KubernetesResourceInfoDto:
-      required:
-      - annotations
-      - createdAt
-      - labels
-      - name
-      - resourceType
-      - spec
-      - status
-      type: object
-      properties:
-        resourceType:
-          type: string
-        name:
-          type: string
-        namespace:
-          type: string
-        status:
-          type: string
-        createdAt:
-          type: string
-          format: date-time
-        labels:
-          type: object
-          additionalProperties:
-            type: string
-        annotations:
-          type: object
-          additionalProperties:
-            type: string
-        spec:
-          type: object
-          additionalProperties:
-            type: object
     RefreshTokenRequest:
       required:
       - refreshToken
@@ -5122,37 +4500,6 @@ components:
         template:
           type: string
         variables:
-          type: array
-          items:
-            type: string
-    KubernetesClusterInfoDto:
-      required:
-      - availableResources
-      - clusterRoles
-      - namespaces
-      - nodeCount
-      - serverVersion
-      - storageClasses
-      type: object
-      properties:
-        serverVersion:
-          type: string
-        nodeCount:
-          type: integer
-          format: int32
-        namespaces:
-          type: array
-          items:
-            type: string
-        availableResources:
-          type: array
-          items:
-            type: string
-        clusterRoles:
-          type: array
-          items:
-            type: string
-        storageClasses:
           type: array
           items:
             type: string
