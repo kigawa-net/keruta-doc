@@ -1442,6 +1442,32 @@ paths:
       responses:
         "200":
           description: OK
+  /api/v1/sessions/realtime/test/{sessionId}:
+    post:
+      tags:
+      - session-realtime-controller
+      operationId: sendTestBroadcast
+      parameters:
+      - name: sessionId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: message
+        in: query
+        required: false
+        schema:
+          type: string
+          default: test
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
   /api/v1/repositories:
     get:
       tags:
@@ -2422,6 +2448,66 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/SessionResponse'
+  /api/v1/sessions/realtime/stats:
+    get:
+      tags:
+      - session-realtime-controller
+      operationId: getConnectionStats
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+  /api/v1/sessions/realtime/health:
+    get:
+      tags:
+      - session-realtime-controller
+      operationId: getRealtimeHealth
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+  /api/v1/sessions/realtime/events:
+    get:
+      tags:
+      - session-realtime-controller
+      operationId: streamSessionEvents
+      parameters:
+      - name: sessionId
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            text/event-stream:
+              schema:
+                $ref: '#/components/schemas/SseEmitter'
+  /api/v1/sessions/realtime/config:
+    get:
+      tags:
+      - session-realtime-controller
+      operationId: getRealtimeConfig
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
   /api/v1/sessions/by-workspace/{workspaceId}:
     get:
       tags:
@@ -4695,6 +4781,12 @@ components:
         buildCompletedAt:
           type: string
           format: date-time
+    SseEmitter:
+      type: object
+      properties:
+        timeout:
+          type: integer
+          format: int64
     RepositoryDetailResponse:
       required:
       - authConfigPresent
