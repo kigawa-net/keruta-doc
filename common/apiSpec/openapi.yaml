@@ -3117,11 +3117,6 @@ components:
           type: string
         type:
           type: string
-          enum:
-          - STRING
-          - NUMBER
-          - BOOLEAN
-          - LIST
         required:
           type: boolean
         defaultValue:
