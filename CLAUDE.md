@@ -67,3 +67,6 @@ The keruta system consists of:
 
 When working with documentation updates, ensure consistency across related documents and maintain the established
 organizational structure.
+- 矛盾は常に修正する
+- サンプルは最小限にする
+- 不要なものは削除する
