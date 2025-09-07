@@ -410,18 +410,48 @@ Keycloakレルム内で以下のロールとグループを設定することを
 
 **管理者ロール（keruta-admin）**
 - 全システム機能へのアクセス権限
+- 全ユーザーのタスク管理権限
 - ユーザー管理、システム設定変更権限
 - 監査ログ閲覧権限
 
 **運用者ロール（keruta-operator）**
-- タスク管理、ジョブ実行権限
-- ログ閲覧、モニタリング権限
+- 自身のタスク管理、ジョブ実行権限
+- 自身のログ閲覧、モニタリング権限
+- ユーザー分離によるデータアクセス制限
 - 設定変更権限なし
 
 **閲覧者ロール（keruta-viewer）**
-- 読み取り専用アクセス権限
-- ダッシュボード、レポート閲覧権限
+- 自身のタスクの読み取り専用アクセス権限
+- 個人ダッシュボード、レポート閲覧権限
+- ユーザー分離による表示制限
 - 操作権限なし
+
+#### ユーザー分離機能
+
+##### 概要
+kerutaシステムでは、ユーザーごとのタスク分離により、各ユーザーが自身のタスクのみにアクセスできるように制御されます。Keycloakのユーザー属性と組み合わせて、マルチテナント環境でのデータ分離を実現します。
+
+##### タスク分離の原則
+- **完全分離**: 各ユーザーは自身が作成したタスクのみアクセス可能
+- **権限継承なし**: 他ユーザーのタスクは一切表示・操作不可
+- **管理者例外**: keruta-adminロールのみ全ユーザーのタスクを管理可能
+
+##### ユーザー識別子
+```json
+{
+  "sub": "550e8400-e29b-41d4-a716-446655440000",
+  "preferred_username": "user01",
+  "email": "user01@example.com",
+  "realm_access": {
+    "roles": ["keruta-operator"]
+  }
+}
+```
+
+##### タスク所有者制御
+- **作成者フィールド**: 各タスクに`created_by`フィールドでユーザーIDを記録
+- **フィルタリング**: APIレスポンスでユーザー自身のタスクのみ返却
+- **権限チェック**: タスク操作前に所有者確認を必須実装
 
 #### セキュリティ要件
 - **HTTPS通信**: 本番環境では必ずHTTPS利用（TLS 1.2以上推奨）
@@ -532,12 +562,14 @@ export interface components {
       id: string;
       name: string;
       status: "pending" | "running" | "completed" | "failed";
+      createdBy: string; // ユーザーID (JWT sub claim)
       createdAt: string;
       updatedAt: string;
     };
     TaskListResponse: {
       tasks: components["schemas"]["Task"][];
       total: number;
+      userId: string; // 現在のユーザーID
     };
     CreateTaskRequest: {
       name: string;
@@ -584,11 +616,14 @@ class TypeSafeApiClient {
 
     if (!response.ok) {
       if (response.status === 401) {
-        // 認証エラー時の処理（SSR対応）
         if (typeof window !== 'undefined') {
           window.location.href = '/auth/login';
         }
         throw new Error('認証が必要です');
+      }
+      
+      if (response.status === 403) {
+        throw new Error('アクセス権限がありません');
       }
       
       const error = await response.json().catch(() => ({ message: 'Unknown error' }));
@@ -779,11 +814,9 @@ import { createTaskService, type TaskListResponse } from "~/services/task.servic
 export const loader: LoaderFunction = async ({ request }) => {
   const auth = await requireAuth(request);
   
-  // サーバーサイドでAPIからデータ取得
-  const apiClient = createServerApiClient(auth.token);
+  // サーバーサイドでAPIからユーザー固有のタスクデータ取得
   const taskService = createTaskService(async () => auth.token);
-  
-  const tasksData = await taskService.getAllTasks();
+  const tasksData = await taskService.getAllTasks(); // 自動的にユーザーフィルタリング
 
   return json({
     user: auth.user,
@@ -799,8 +832,8 @@ export default function TasksPage() {
 
   return (
     <div>
-      <h1>タスク管理</h1>
-      <p>合計: {tasks.total}件</p>
+      <h1>マイタスク</h1>
+      <p>あなたのタスク: {tasks.total}件</p>
       
       <div>
         {tasks.tasks.map(task => (
@@ -808,6 +841,7 @@ export default function TasksPage() {
             <h3>{task.name}</h3>
             <p>状態: {task.status}</p>
             <p>作成日: {new Date(task.createdAt).toLocaleDateString()}</p>
+            <small>作成者: {task.createdBy === user.sub ? '自分' : task.createdBy}</small>
           </div>
         ))}
       </div>
