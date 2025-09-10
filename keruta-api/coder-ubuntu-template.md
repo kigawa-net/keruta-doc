@@ -296,6 +296,9 @@ variable "workspaces_namespace" {
 ```bash
 # 使用するテンプレートID（必須）
 export CODER_TEMPLATE_ID="keruta-ubuntu-22.04"
+
+# ワークスペース名のprefix（必須）
+export CODER_WORKSPACE_PREFIX="dev"
 ```
 
 ### application.propertiesの設定
@@ -303,6 +306,9 @@ export CODER_TEMPLATE_ID="keruta-ubuntu-22.04"
 ```properties
 # 使用するテンプレートID
 coder.template-id=${CODER_TEMPLATE_ID:}
+
+# ワークスペース名prefix
+coder.workspace-prefix=${CODER_WORKSPACE_PREFIX:}
 
 # テンプレート検証設定
 coder.template-validation.strict=true

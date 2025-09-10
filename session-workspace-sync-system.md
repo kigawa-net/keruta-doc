@@ -109,7 +109,7 @@ PENDING → ACTIVE → COMPLETED/TERMINATED
    - 環境変数`CODER_TEMPLATE_ID`で指定された単一テンプレートを固定使用
    - リクエストでのテンプレート指定は無視
    - すべてのワークスペースで同じテンプレートを使用
-3. **ワークスペース名生成**: `session-{sessionId(8桁)}-{sanitizedSessionName}`
+3. **ワークスペース名生成**: `{CODER_WORKSPACE_PREFIX}-{sanitizedSessionName}`
 
 #### 実装コード例
 
@@ -120,6 +120,25 @@ private fun getFixedTemplate(): String {
     
     // 起動時にテンプレートの存在を確認済み
     return templateId
+}
+
+private fun generateWorkspaceName(sessionName: String): String {
+    val prefix = System.getenv("CODER_WORKSPACE_PREFIX")
+        ?: throw IllegalStateException("CODER_WORKSPACE_PREFIX environment variable is not configured")
+    
+    // セッション名をサニタイズ（英数字・ハイフンのみ許可）
+    val sanitizedName = sessionName.replace(Regex("[^a-zA-Z0-9\\-]"), "-")
+        .lowercase()
+        .trim('-')
+    
+    val workspaceName = "$prefix-$sanitizedName"
+    
+    // 名前の長さ制限（Coderの制限に合わせて63文字以下）
+    return if (workspaceName.length > 63) {
+        workspaceName.substring(0, 63).trimEnd('-')
+    } else {
+        workspaceName
+    }
 }
 ```
 
@@ -257,7 +276,7 @@ private fun calculateBackoffDelay(attempt: Int): Long {
   "workspaces": [
     {
       "id": "workspace-456",
-      "name": "session-12345678-my-project",
+      "name": "dev-my-project",
       "status": "running",
       "health": "healthy"
     }
@@ -431,6 +450,8 @@ keruta.executor.api-base-url=http://localhost:8080
 # Coder接続設定
 keruta.executor.coder.base-url=https://coder.example.com
 keruta.executor.coder.token=${KERUTA_EXECUTOR_CODER_TOKEN}
+keruta.executor.coder.template-id=${CODER_TEMPLATE_ID}
+keruta.executor.coder.workspace-prefix=${CODER_WORKSPACE_PREFIX}
 
 # 監視間隔調整 (application.yml)
 spring:
