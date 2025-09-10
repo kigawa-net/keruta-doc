@@ -105,32 +105,21 @@ PENDING → ACTIVE → COMPLETED/TERMINATED
 #### 作成プロセス
 
 1. **セッション-ワークスペース関連付け**: セッションIDをワークスペース名に含める
-2. **テンプレート選択ロジック**:
-   - セッションタグとテンプレート名のマッチング
-   - "keruta"専用テンプレートの優先選択
-   - フォールバック: 最初の利用可能テンプレート
+2. **テンプレート使用ロジック**:
+   - 環境変数`CODER_TEMPLATE_ID`で指定された単一テンプレートを固定使用
+   - リクエストでのテンプレート指定は無視
+   - すべてのワークスペースで同じテンプレートを使用
 3. **ワークスペース名生成**: `session-{sessionId(8桁)}-{sanitizedSessionName}`
 
 #### 実装コード例
 
 ```kotlin
-private fun selectBestTemplate(templates: List<CoderTemplateDto>, session: SessionDto): CoderTemplateDto? {
-    // タグマッチング
-    for (tag in session.tags) {
-        val matchingTemplate = templates.find { template ->
-            template.name.contains(tag, ignoreCase = true) ||
-            template.displayName.contains(tag, ignoreCase = true) ||
-            template.description.contains(tag, ignoreCase = true)
-        }
-        if (matchingTemplate != null) return matchingTemplate
-    }
+private fun getFixedTemplate(): String {
+    val templateId = System.getenv("CODER_TEMPLATE_ID")
+        ?: throw IllegalStateException("CODER_TEMPLATE_ID environment variable is not configured")
     
-    // Keruta専用テンプレート
-    val kerutaTemplate = templates.find { it.name.contains("keruta", ignoreCase = true) }
-    if (kerutaTemplate != null) return kerutaTemplate
-    
-    // フォールバック
-    return templates.firstOrNull()
+    // 起動時にテンプレートの存在を確認済み
+    return templateId
 }
 ```
 
@@ -155,13 +144,16 @@ private fun selectBestTemplate(templates: List<CoderTemplateDto>, session: Sessi
   2. ワークスペース状態確認
   3. 停止状態ワークスペースの自動開始
 
-### テンプレート選択ロジック
+### テンプレート使用制約
 
-#### 選択優先度
+#### 固定テンプレート使用
 
-1. **セッションタグマッチング**: セッションに設定されたタグとテンプレート情報の照合
-2. **Keruta専用テンプレート**: "keruta"を含むテンプレート名の優先選択
-3. **デフォルトテンプレート**: 最初の利用可能テンプレート
+**重要**: 単一テンプレートを固定使用
+
+1. **固定テンプレート**: `CODER_TEMPLATE_ID`で指定されたテンプレートのみ使用
+2. **リクエスト無視**: APIリクエストでのテンプレート指定は無視される
+3. **統一使用**: すべてのワークスペース作成で同じテンプレートを使用
+4. **動的選択禁止**: セッションタグや動的選択は無効
 
 ### エラーハンドリングと回路ブレーカーパターン
 
