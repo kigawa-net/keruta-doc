@@ -16,7 +16,7 @@ keruta管理パネルは、従来のSpring Boot + Thymeleafによる実装から
 
 ## 技術スタック
 - **フレームワーク**: Remix.js (React)
-- **スタイリング**: Bootstrap 5
+- **スタイリング**: Tailwind CSS
 - **言語**: TypeScript
 - **ビルドツール**: Remix CLI
 
@@ -38,6 +38,7 @@ Remixでは、ファイルベースのルーティングを採用しています
 
 - `/` - ダッシュボード
 - `/tasks` - タスク管理
+- `/sessions` - セッション管理
 - `/documents` - ドキュメント管理
 - `/repositories` - リポジトリ管理
 - `/kubernetes` - Kubernetes設定

@@ -83,6 +83,10 @@ keruta管理パネルは、タスク・ドキュメント・リポジトリ・Ku
 | タスク一覧・詳細閲覧 |      ○         |         ○           |         ○          |
 | タスク作成・編集   |      ○         |         △（制限あり）|         ○          |
 | タスク削除         |      ○         |         ×           |         ×          |
+| セッション一覧・詳細閲覧 | ○ | ○ | ○ |
+| セッション作成・編集 | ○ | △（制限あり） | ○ |
+| セッション削除 | ○ | × | × |
+| ワークスペース操作 | ○ | △（自分のみ） | ○ |
 | エージェント管理   |      ○         |         ×           |         ×          |
 | ドキュメント管理   |      ○         |         △（閲覧のみ）|         ○          |
 | Kubernetes設定    |      ○         |         ×           |         ×          |
@@ -93,11 +97,21 @@ keruta管理パネルは、タスク・ドキュメント・リポジトリ・Ku
 
 ※△は権限設定やロールによって制御可能
 
+### セッション管理
+- 一覧・詳細・新規作成・編集・削除
+- ワークスペース連携・状態監視・フィルタリング・検索
+- セッション作成と同時にCoderワークスペースが自動作成されます
+- セッション状態（PENDING/ACTIVE/COMPLETED/TERMINATED）の確認・追跡
+- 関連ワークスペースへの直接アクセス機能
+
+詳細は[セッション関連フォーム仕様](./sessionFormSpec.md)を参照してください。
+
 ## ナビゲーション
-- Dashboard, Tasks, Documents, Repositories, Kubernetes, Agents
+- Dashboard, Tasks, Sessions, Documents, Repositories, Kubernetes, Agents
 
 ## 技術情報
-- Spring Boot, Thymeleaf, Bootstrap 5
+- Spring Boot, Thymeleaf（従来版）
+- Remix.js, TypeScript, Tailwind CSS（新版）
 
 ## FAQ・トラブルシューティング
 - ログインできない: Keycloak設定やネットワーク接続を確認
