@@ -19,12 +19,16 @@ Kerutaシステムにおけるcoderテンプレートの利用は、環境変数
 | 環境変数名 | 必須 | 説明 | 形式 | 例 |
 |---|---|---|---|---|
 | `CODER_TEMPLATE_ID` | ✓ | 使用するテンプレートID | 単一ID | `keruta-ubuntu-template` |
+| `CODER_WORKSPACE_PREFIX` | ✓ | ワークスペース名のprefix | 文字列 | `dev`, `prod`, `test` |
 
 ### 設定例
 
 ```bash
 # 使用するテンプレートIDの指定（必須）
 export CODER_TEMPLATE_ID="keruta-ubuntu-22.04"
+
+# ワークスペース名のprefix指定（必須）
+export CODER_WORKSPACE_PREFIX="dev"
 ```
 
 ## 実装仕様
@@ -33,13 +37,18 @@ export CODER_TEMPLATE_ID="keruta-ubuntu-22.04"
 
 1. **環境変数確認**
    - `CODER_TEMPLATE_ID`の存在確認
+   - `CODER_WORKSPACE_PREFIX`の存在確認
    - 未設定の場合は起動時エラー
 
 2. **テンプレート固定使用**
    - すべてのワークスペース作成で`CODER_TEMPLATE_ID`を使用
    - リクエストでのテンプレートID指定は無効化
 
-3. **テンプレート存在確認**
+3. **ワークスペース名生成**
+   - `{CODER_WORKSPACE_PREFIX}-{sessionName}`の形式で生成
+   - セッション名はサニタイズして使用
+
+4. **テンプレート存在確認**
    - 起動時にCoderシステムでテンプレートの存在を確認
    - 存在しない場合は起動エラー
 
@@ -47,8 +56,10 @@ export CODER_TEMPLATE_ID="keruta-ubuntu-22.04"
 
 | エラーケース | HTTPステータス | エラーメッセージ |
 |---|---|---|
-| 環境変数未設定 | 500 Internal Server Error | "CODER_TEMPLATE_ID environment variable is not configured" |
+| テンプレートID未設定 | 500 Internal Server Error | "CODER_TEMPLATE_ID environment variable is not configured" |
+| Prefix未設定 | 500 Internal Server Error | "CODER_WORKSPACE_PREFIX environment variable is not configured" |
 | テンプレート不存在 | 500 Internal Server Error | "Specified template ID '{templateId}' does not exist in Coder" |
+| 不正なワークスペース名 | 400 Bad Request | "Invalid workspace name generated: '{workspaceName}'" |
 
 ## セキュリティ上の制約
 
@@ -85,7 +96,7 @@ export CODER_TEMPLATE_ID="keruta-ubuntu-22.04"
    - セキュリティチェックの実施
 
 2. **環境変数更新**
-   - `CODER_ALLOWED_TEMPLATES`に新しいテンプレートIDを追加
+   - `CODER_TEMPLATE_ID`に新しいテンプレートIDを設定
    - システムの再起動
 
 3. **検証**
@@ -102,9 +113,11 @@ export CODER_TEMPLATE_ID="keruta-ubuntu-22.04"
 ```bash
 # 環境変数の確認
 echo $CODER_TEMPLATE_ID
+echo $CODER_WORKSPACE_PREFIX
 
 # ログの確認
 kubectl logs deployment/keruta-api -n keruta | grep -i template
+kubectl logs deployment/keruta-api -n keruta | grep -i workspace
 ```
 
 **対処法**:
@@ -136,7 +149,7 @@ kubectl logs deployment/keruta-api -n keruta | grep -i template
 ```json
 {
   "id": "workspace-123",
-  "name": "my-workspace", 
+  "name": "dev-my-session",  // {CODER_WORKSPACE_PREFIX}-{sessionName}の形式
   "templateId": "keruta-ubuntu-22.04",  // 環境変数で指定されたテンプレートを使用
   "status": "pending"
 }
@@ -149,9 +162,11 @@ kubectl logs deployment/keruta-api -n keruta | grep -i template
 ```properties
 # 環境変数からの読み込み
 coder.template-id=${CODER_TEMPLATE_ID:}
+coder.workspace-prefix=${CODER_WORKSPACE_PREFIX:}
 
 # バリデーション設定
 coder.template-validation.strict=true
+coder.workspace-name-validation.strict=true
 ```
 
 ### Docker Compose設定例
@@ -161,6 +176,7 @@ services:
   keruta-api:
     environment:
       - CODER_TEMPLATE_ID=keruta-ubuntu-22.04
+      - CODER_WORKSPACE_PREFIX=dev
     # その他の設定...
 ```
 
@@ -169,9 +185,12 @@ services:
 ### ログ出力
 
 ```
-[INFO] Using fixed template: templateId=keruta-ubuntu-22.04
+[INFO] Using fixed template: templateId=keruta-ubuntu-22.04, workspacePrefix=dev
+[INFO] Generated workspace name: workspaceName=dev-my-session
 [ERROR] Environment variable CODER_TEMPLATE_ID is not configured
+[ERROR] Environment variable CODER_WORKSPACE_PREFIX is not configured
 [ERROR] Template does not exist in Coder: templateId=keruta-ubuntu-22.04
+[ERROR] Invalid workspace name generated: workspaceName=dev-invalid@name
 ```
 
 ### メトリクス
