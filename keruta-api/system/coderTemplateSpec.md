@@ -85,7 +85,7 @@ export CODER_TEMPLATE_ID="keruta-ubuntu-22.04"
    - セキュリティチェックの実施
 
 2. **環境変数更新**
-   - `CODER_ALLOWED_TEMPLATES`に新しいテンプレートIDを追加
+   - `CODER_TEMPLATE_ID`に新しいテンプレートIDを設定
    - システムの再起動
 
 3. **検証**

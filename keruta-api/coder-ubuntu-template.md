@@ -36,11 +36,11 @@ terraform {
   required_providers {
     coder = {
       source  = "coder/coder"
-      version = "~> 0.11.0"
+      version = "~> 0.21.0"
     }
     kubernetes = {
       source  = "hashicorp/kubernetes"
-      version = "~> 2.22"
+      version = "~> 2.30"
     }
   }
 }
@@ -53,8 +53,7 @@ data "coder_provisioner" "me" {
 }
 
 provider "kubernetes" {
-  # Kubernetes接続設定をここに追加
-  config_path = "/path/to/kubeconfig"
+  # クラスター内での実行を想定
 }
 
 data "coder_workspace" "me" {
@@ -66,42 +65,13 @@ resource "coder_agent" "main" {
   startup_script_timeout = 180
   startup_script = <<-EOT
     set -e
-
-    # システムアップデート
+    # 基本ツールのインストール
     sudo apt-get update
-    sudo apt-get upgrade -y
-
-    # 開発ツールのインストール
-    sudo apt-get install -y \\
-      curl \\
-      wget \\
-      git \\
-      vim \\
-      nano \\
-      htop \\
-      tree \\
-      jq \\
-      unzip \\
-      build-essential \\
-      python3 \\
-      python3-pip \\
-      nodejs \\
-      npm
-
-    # Dockerのインストール
-    curl -fsSL https://get.docker.com -o get-docker.sh
-    sudo sh get-docker.sh
-    sudo usermod -aG docker $USER
-
-    # Docker Composeのインストール
-    sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-\$(uname -s)-\$(uname -m)" -o /usr/local/bin/docker-compose
-    sudo chmod +x /usr/local/bin/docker-compose
-
-    # Keruta用の追加設定
+    sudo apt-get install -y curl git vim build-essential
+    
+    # ワークスペースディレクトリの作成
     mkdir -p /home/coder/workspace
     chown coder:coder /home/coder/workspace
-
-    echo "Keruta Ubuntu環境のセットアップが完了しました"
   EOT
 
   # メタデータ
@@ -182,15 +152,20 @@ resource "kubernetes_deployment" "main" {
       }
       spec {
         security_context {
-          run_as_user = "1000"
-          fs_group    = "1000"
+          run_as_user    = 1000
+          run_as_group   = 1000
+          fs_group       = 1000
+          run_as_non_root = true
         }
         container {
           name  = "main"
           image = "ubuntu:22.04"
           command = ["sh", "-c", coder_agent.main.init_script]
           security_context {
-            run_as_user = "1000"
+            run_as_user                = 1000
+            run_as_non_root            = true
+            allow_privilege_escalation = false
+            read_only_root_filesystem  = false
           }
           env {
             name  = "CODER_AGENT_TOKEN"
