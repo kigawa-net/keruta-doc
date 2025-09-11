@@ -14,36 +14,31 @@
 ```kotlin
 import java.time.LocalDateTime
 
+@Document(collection = "tasks")
 data class Task(
-    val id: String? = null,
-    val title: String = "a",
-    val description: String? = null,
-    val priority: Int = 0,
+    @Id
+    val id: String = "",
+    val sessionId: String, // セッションID
+    val parentTaskId: String? = null, // 親タスクID
+    val name: String, // タスク名
+    val description: String = "", // タスク説明
+    val script: String = "", // 実行スクリプト
     val status: TaskStatus = TaskStatus.PENDING,
-    val documents: List<Document> = emptyList(),
-    val image: String? = null,
-    val namespace: String = "default",
-    val jobName: String? = null,
-    val podName: String? = null, // 互換用
-    val additionalEnv: Map<String, String> = emptyMap(),
-    val kubernetesManifest: String? = null,
-    val logs: String? = null,
-    val agentId: String? = null,
-    val repositoryId: String? = null, // init container用
-    val parentId: String? = null, // 親子タスク用
-    val waitingReason: String? = null, // 入力待ち理由
-    val timeoutAt: LocalDateTime? = null, // 入力待ちタイムアウト時刻
+    val message: String = "", // ステータスメッセージ
+    val progress: Int = 0, // 進捗（0-100）
+    val errorCode: String = "", // エラーコード
+    val parameters: Map<String, Any> = emptyMap(), // パラメータ
     val createdAt: LocalDateTime = LocalDateTime.now(),
-    val updatedAt: LocalDateTime = LocalDateTime.now()
+    val updatedAt: LocalDateTime = LocalDateTime.now(),
 )
 
 enum class TaskStatus {
     PENDING,
     IN_PROGRESS,
-    WAITING_FOR_INPUT, // 入力待ち状態
     COMPLETED,
-    CANCELLED,
-    FAILED
+    FAILED,
+    WAITING_FOR_INPUT, // 入力待ち状態
+    RETRYING, // リトライ中
 }
 ```
 
