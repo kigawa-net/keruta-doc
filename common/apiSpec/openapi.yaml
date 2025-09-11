@@ -1,4 +1,26 @@
 components:
+  securitySchemes:
+    keycloakAuth:
+      type: oauth2
+      description: Keycloak OAuth2 認証
+      flows:
+        authorizationCode:
+          authorizationUrl: ${KEYCLOAK_SERVER_URL}/realms/keruta/protocol/openid_connect/auth
+          tokenUrl: ${KEYCLOAK_SERVER_URL}/realms/keruta/protocol/openid_connect/token
+          scopes:
+            openid: OpenID Connect scope
+            profile: プロファイル情報アクセス
+            email: メールアドレスアクセス
+            offline_access: オフラインアクセス（リフレッシュトークン）
+            keruta:admin: システム管理者権限
+            keruta:project-admin: プロジェクト管理者権限
+            keruta:developer: 開発者権限
+            keruta:viewer: 閲覧者権限
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Keycloak JWTトークンによる認証
   schemas:
     AgentCommandResultResponse:
       properties:
@@ -1164,15 +1186,26 @@ components:
           type: string
         workspaceId:
           type: string
+        createdBy:
+          type: string
+          description: タスク作成者のユーザーID（Keycloak sub claim）
+        createdByUsername:
+          type: string
+          description: タスク作成者のユーザー名（表示用）
+        ownerId:
+          type: string
+          description: タスク所有者のユーザーID（通常はcreatedByと同じ）
       required:
       - artifacts
       - createdAt
+      - createdBy
       - dependsOn
       - id
       - logs
       - maxRetries
       - metadata
       - name
+      - ownerId
       - parameters
       - priority
       - retryCount
@@ -1673,6 +1706,9 @@ info:
   title: OpenAPI definition
   version: v0
 openapi: 3.0.1
+security:
+  - bearerAuth: []
+  - keycloakAuth: []
 paths:
   /api/v1/agents:
     get:

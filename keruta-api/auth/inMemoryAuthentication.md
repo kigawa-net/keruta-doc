@@ -1,6 +1,17 @@
-# In-Memory Authentication Configuration
+# In-Memory Authentication Configuration [非推奨]
+
+> **⚠️ 非推奨**: このドキュメントは非推奨です。kerutaシステムはKeycloak認証に完全移行しました。新しい認証設定については [keycloakIntegration.md](./keycloakIntegration.md) を参照してください。
 
 > **概要**: kerutaシステムの内部APIアクセス用の認証メカニズムについて説明します。このドキュメントでは、システム内部で使用される認証ユーザーの設定方法を解説します。
+
+## 移行について
+
+このinMemory認証方式は以下の理由により非推奨となりました：
+- セキュリティリスク：パスワードがハードコードされる
+- スケーラビリティの問題：ユーザー管理が困難
+- SSO機能の欠如：複数システム間での認証統合ができない
+
+**新しいシステムでは [Keycloak認証](./keycloakIntegration.md) を使用してください。**
 
 ## 目次
 - [概要](#概要)

@@ -14,77 +14,77 @@
 
 ### keruta
 
-- [README.md](keruta/README.md)
+- [README.md](keruta-api/README.md)
   - kerutaプロジェクトの概要
 
 #### admin
-- [adminPanel.md](keruta/admin/adminPanel.md)
+- [adminPanel.md](keruta-admin/adminPanel.md)
   - 管理パネルの機能・画面・操作方法
-- [adminPanelScriptGenerator.md](keruta/admin/adminPanelScriptGenerator.md)
+- [adminPanelScriptGenerator.md](keruta-admin/adminPanelScriptGenerator.md)
   - 管理パネルスクリプトジェネレーター
 
 #### auth
-- [keycloakIntegration.md](keruta/auth/keycloakIntegration.md)
+- [keycloakIntegration.md](keruta-api/auth/keycloakIntegration.md)
   - Keycloakによる認証・認可
 
 #### git
-- [gitExcludeSpec.md](keruta/git/gitExcludeSpec.md)
+- [gitExcludeSpec.md](keruta-api/git/gitExcludeSpec.md)
   - git-excludeの仕様
-- [repositoryManagement.md](keruta/git/repositoryManagement.md)
+- [repositoryManagement.md](keruta-api/git/repositoryManagement.md)
   - リポジトリ管理
 
 #### kubernetes
-- [kubernetesIntegration.md](keruta/kubernetes/kubernetesIntegration.md)
+- [kubernetesIntegration.md](keruta-api/kubernetes/kubernetesIntegration.md)
   - Kubernetes連携の概要
-- [gitCloneInitContainer.md](keruta/kubernetes/gitCloneInitContainer.md)
+- [gitCloneInitContainer.md](keruta-api/kubernetes/gitCloneInitContainer.md)
   - Git Clone Init Container
-- [kubernetesAndDeploy.md](keruta/kubernetes/kubernetesAndDeploy.md)
+- [kubernetesAndDeploy.md](keruta-api/kubernetes/kubernetesAndDeploy.md)
   - Kubernetes環境へのデプロイ
-- [kubernetesCleanupJob.md](keruta/kubernetes/kubernetesCleanupJob.md)
+- [kubernetesCleanupJob.md](keruta-api/kubernetes/kubernetesCleanupJob.md)
   - クリーンアップJob
-- [kubernetesInitContainer.md](keruta/kubernetes/kubernetesInitContainer.md)
+- [kubernetesInitContainer.md](keruta-api/kubernetes/kubernetesInitContainer.md)
   - Init Container
-- [kubernetesJobSpec.md](keruta/kubernetes/kubernetesJobSpec.md)
+- [kubernetesJobSpec.md](keruta-api/kubernetes/kubernetesJobSpec.md)
   - Jobの仕様
-- [kubernetesLogCollection.md](keruta/kubernetes/kubernetesLogCollection.md)
+- [kubernetesLogCollection.md](keruta-api/kubernetes/kubernetesLogCollection.md)
   - ログ収集
-- [kubernetesPVC.md](keruta/kubernetes/kubernetesPVC.md)
+- [kubernetesPVC.md](keruta-api/kubernetes/kubernetesPVC.md)
   - 永続ボリューム(PVC)
 
 #### misc
-- [kotlinExamples.md](keruta/misc/kotlinExamples.md)
+- [kotlinExamples.md](keruta-api/misc/kotlinExamples.md)
   - Kotlin実装例
-- [monitoring.md](keruta/misc/monitoring.md)
+- [monitoring.md](keruta-api/misc/monitoring.md)
   - モニタリング
 
 #### setup
-- [installScriptSpecification.md](keruta/setup/installScriptSpecification.md)
+- [installScriptSpecification.md](keruta-api/setup/installScriptSpecification.md)
   - インストールスクリプト仕様
-- [setupScript.md](keruta/setup/setupScript.md)
+- [setupScript.md](keruta-api/setup/setupScript.md)
   - セットアップスクリプト
 
 #### system
-- [summaryAndLinks.md](keruta/system/summaryAndLinks.md)
+- [summaryAndLinks.md](keruta-api/system/summaryAndLinks.md)
   - 概要と関連リンク
-- [projectDetails.md](keruta/system/projectDetails.md)
+- [projectDetails.md](keruta-api/system/projectDetails.md)
   - プロジェクト詳細
-- [systemOverview.md](keruta/system/systemOverview.md)
+- [systemOverview.md](keruta-api/system/systemOverview.md)
   - システム概要
-- [dataModel.md](keruta/system/dataModel.md)
+- [dataModel.md](keruta-api/system/dataModel.md)
   - データモデル
-- [taskApi.md](keruta/system/api/taskApi.md)
+- [taskApi.md](keruta-api/system/api/taskApi.md)
   - タスク管理API
-- [agentApi.md](keruta/system/api/agentApi.md)
+- [agentApi.md](keruta-api/system/api/agentApi.md)
   - エージェント管理API
-- [repositoryApi.md](keruta/system/api/repositoryApi.md)
+- [repositoryApi.md](keruta-api/system/api/repositoryApi.md)
   - リポジトリ管理API
-- [documentApi.md](keruta/system/api/documentApi.md)
+- [documentApi.md](keruta-api/system/api/documentApi.md)
   - ドキュメント管理API
 
 #### task
-- [taskQueueSystemDesign.md](keruta/task/taskQueueSystemDesign.md)
+- [taskQueueSystemDesign.md](keruta-api/task/taskQueueSystemDesign.md)
   - タスクキューシステム設計
-- [autoFixTask.md](keruta/task/autoFixTask.md)
+- [autoFixTask.md](keruta-api/task/autoFixTask.md)
   - 自動修正タスク
 
 #### common

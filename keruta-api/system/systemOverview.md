@@ -41,7 +41,8 @@ kerutaは、小規模チーム向けの軽量なコーディングエージェ�
 
 ### API Service (Kotlin)
 - Spring BootによるREST API
-- タスク受付・状態管理・認証
+- タスク受付・状態管理
+- Keycloak統合認証・認可
 
 ### Worker/Agent Pods
 - タスク処理ワーカー
@@ -49,6 +50,7 @@ kerutaは、小規模チーム向けの軽量なコーディングエージェ�
 
 ### Web UI / 管理パネル
 - タスク・ドキュメント・リポジトリ管理
+- Keycloak SSO認証対応
 
 ### MongoDB
 - タスク・ドキュメント・ユーザー等のデータ永続化
