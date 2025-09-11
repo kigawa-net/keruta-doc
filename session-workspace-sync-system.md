@@ -69,12 +69,15 @@
 2. keruta-api → MongoDB: セッション情報保存 (PENDING状態)
 3. keruta-executor → keruta-api: PENDING状態セッション検索 (30秒間隔)
 4. keruta-executor → Coder API: ワークスペース作成
-5. keruta-executor → keruta-api: セッション状態をACTIVEに更新
+5. keruta-executor → keruta-api: 関連タスク状況に応じてセッション状態を更新
+   - 未完了タスクあり: ACTIVE状態に更新
+   - タスクなし/全完了: COMPLETED状態に更新
 
-ワークスペース監視フロー:
+ワークスペース・タスク監視フロー:
 1. keruta-executor → keruta-api: ACTIVE状態セッション検索 (60秒間隔)
 2. keruta-executor → Coder API: ワークスペース状態確認
-3. keruta-executor → Coder API: 必要に応じてワークスペース開始
+3. keruta-executor → keruta-api: 関連タスクの完了状況確認
+4. keruta-executor → keruta-api: タスク完了時にセッション状態をCOMPLETEDに更新
 ```
 
 ## 実装詳細
@@ -86,17 +89,25 @@
 ```
 PENDING → ACTIVE → COMPLETED/TERMINATED
    ↑         ↑           ↑
-   │         │           └─ 手動終了/自動終了
-   │         └─ ワークスペース作成完了時
+   │         │           └─ 手動終了/全タスク完了
+   │         └─ ワークスペース作成完了かつ未完了タスク存在時
    └─ セッション作成時の初期状態
 ```
 
 #### 状態管理ルール
 
 - **PENDING**: セッション作成直後、ワークスペース作成待ち
-- **ACTIVE**: ワークスペース作成完了、利用可能状態
-- **COMPLETED**: 正常終了
+- **ACTIVE**: ワークスペース作成完了かつ未完了タスクが存在する状態
+- **COMPLETED**: 関連する全タスクが完了した状態
 - **TERMINATED**: 異常終了またはキャンセル
+
+#### タスクベースの状態制御
+
+セッション状態は関連タスクの状況によって自動制御されます：
+
+- セッションにタスクが関連付けられている場合、未完了タスクがある間はACTIVE状態を維持
+- 関連するすべてのタスクが完了すると、セッション状態は自動的にCOMPLETEDに遷移
+- タスクが存在しない場合は、ワークスペース作成完了後即座にACTIVE状態になる
 
 **重要**: セッション状態の直接更新は403 Forbiddenで拒否され、システムによる自動管理のみ許可されています。
 
