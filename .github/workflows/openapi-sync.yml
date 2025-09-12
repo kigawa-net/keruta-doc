@@ -37,12 +37,15 @@ jobs:
         run: |
           cd keruta-api
           ./gradlew openApiGenerate
+          # Move generated files to a non-gitignored location
+          mkdir -p generated-api
+          cp -r build/generated/* generated-api/ 2>/dev/null || true
       
       - name: Check for changes in keruta-api
         id: api-changes
         run: |
           cd keruta-api
-          git add -N build/generated/ || true
+          git add -N generated-api/ || true
           if git diff --quiet --exit-code; then
             echo "changed=false" >> $GITHUB_OUTPUT
           else
@@ -55,7 +58,7 @@ jobs:
           cd keruta-api
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
-          git add build/generated/
+          git add generated-api/
           git commit -m "Update OpenAPI generated files from keruta-doc
           
           Triggered by keruta-doc push: ${{ github.repository }}@${{ github.sha }}
@@ -290,6 +293,9 @@ jobs:
           cd keruta-executor
           # Override inputSpec to use running API server
           ./gradlew openApiGenerate -PinputSpec=http://localhost:8080/v3/api-docs
+          # Move generated files to a non-gitignored location
+          mkdir -p generated-client
+          cp -r build/generated-sources/* generated-client/ 2>/dev/null || true
       
       - name: Stop API server
         run: kill $API_PID || true
@@ -298,7 +304,7 @@ jobs:
         id: executor-changes
         run: |
           cd keruta-executor
-          git add -N build/generated-sources/ || true
+          git add -N generated-client/ || true
           if git diff --quiet --exit-code; then
             echo "changed=false" >> $GITHUB_OUTPUT
           else
@@ -311,7 +317,7 @@ jobs:
           cd keruta-executor
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
-          git add build/generated-sources/
+          git add generated-client/
           git commit -m "Update Kotlin API client from keruta-doc
           
           Triggered by keruta-doc push: ${{ github.repository }}@${{ github.sha }}
