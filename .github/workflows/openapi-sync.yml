@@ -19,6 +19,7 @@ jobs:
           repository: kigawa-net/keruta-api
           token: ${{ secrets.GIT_TOKEN }}
           path: keruta-api
+          ref: develop
           fetch-depth: 0
       
       - name: Set up JDK 21
@@ -73,6 +74,7 @@ jobs:
           repository: kigawa-net/keruta-api
           token: ${{ secrets.GIT_TOKEN }}
           path: keruta-api
+          ref: develop
           fetch-depth: 0
       
       - name: Checkout keruta-admin repository
@@ -81,6 +83,7 @@ jobs:
           repository: kigawa-net/keruta-admin
           token: ${{ secrets.GIT_TOKEN }}
           path: keruta-admin
+          ref: develop
           fetch-depth: 0
       
       - name: Set up JDK 21
@@ -160,6 +163,7 @@ jobs:
           repository: kigawa-net/keruta-api
           token: ${{ secrets.GIT_TOKEN }}
           path: keruta-api
+          ref: develop
           fetch-depth: 0
       
       - name: Checkout keruta-agent repository
@@ -168,6 +172,7 @@ jobs:
           repository: kigawa-net/keruta-agent
           token: ${{ secrets.GIT_TOKEN }}
           path: keruta-agent
+          ref: develop
           fetch-depth: 0
       
       - name: Set up JDK 21
@@ -242,6 +247,7 @@ jobs:
           repository: kigawa-net/keruta-api
           token: ${{ secrets.GIT_TOKEN }}
           path: keruta-api
+          ref: develop
           fetch-depth: 0
       
       - name: Checkout keruta-executor repository
@@ -250,6 +256,7 @@ jobs:
           repository: kigawa-net/keruta-executor
           token: ${{ secrets.GIT_TOKEN }}
           path: keruta-executor
+          ref: develop
           fetch-depth: 0
       
       - name: Set up JDK 21
