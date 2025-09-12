@@ -45,8 +45,8 @@ export CODER_WORKSPACE_PREFIX="dev"
    - リクエストでのテンプレートID指定は無効化
 
 3. **ワークスペース名生成**
-   - `{CODER_WORKSPACE_PREFIX}-{sessionName}`の形式で生成
-   - セッション名はサニタイズして使用
+   - `{CODER_WORKSPACE_PREFIX}-{queueName}`の形式で生成
+   - キュー名はサニタイズして使用
 
 4. **テンプレート存在確認**
    - 起動時にCoderシステムでテンプレートの存在を確認
@@ -149,7 +149,7 @@ kubectl logs deployment/keruta-api -n keruta | grep -i workspace
 ```json
 {
   "id": "workspace-123",
-  "name": "dev-my-session",  // {CODER_WORKSPACE_PREFIX}-{sessionName}の形式
+  "name": "dev-my-queue",  // {CODER_WORKSPACE_PREFIX}-{queueName}の形式
   "templateId": "keruta-ubuntu-22.04",  // 環境変数で指定されたテンプレートを使用
   "status": "pending"
 }
@@ -186,7 +186,7 @@ services:
 
 ```
 [INFO] Using fixed template: templateId=keruta-ubuntu-22.04, workspacePrefix=dev
-[INFO] Generated workspace name: workspaceName=dev-my-session
+[INFO] Generated workspace name: workspaceName=dev-my-queue
 [ERROR] Environment variable CODER_TEMPLATE_ID is not configured
 [ERROR] Environment variable CODER_WORKSPACE_PREFIX is not configured
 [ERROR] Template does not exist in Coder: templateId=keruta-ubuntu-22.04
@@ -201,5 +201,5 @@ services:
 ## 関連ドキュメント
 
 - [Coderカスタムubuntuテンプレート設定ガイド](../coder-ubuntu-template.md)
-- [Session-Workspace同期APIシステム](../../session-workspace-sync-system.md)
+- [Queue-Workspace同期APIシステム](../../queue-workspace-sync-system.md)
 - [システム概要](./systemOverview.md)

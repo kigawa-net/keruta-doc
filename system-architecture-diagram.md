@@ -30,7 +30,7 @@ graph TB
         end
         
         subgraph "Executor Layer"
-            EXEC[keruta-executor<br/>Worker Manager]
+            EXEC[keruta-coder-provider<br/>Worker Manager]
         end
         
         subgraph "Worker Layer"
@@ -141,7 +141,7 @@ graph TB
 - **Ingress Controller**: 外部トラフィック制御
 - **keruta-api Service**: メインAPIサーバー（Spring Boot/Kotlin）
 - **keruta-admin Service**: Web UIホスティング（React Router SSR）
-- **keruta-executor**: Worker Pod管理・オーケストレーション
+- **keruta-coder-provider**: Worker Pod管理・オーケストレーション
 - **Worker Pods**: Coder + keruta-agentによるタスクキュー処理
 - **Task Job Pods**: Coder環境での実際のタスク実行
 
@@ -161,8 +161,8 @@ graph TB
 ### タスク実行フロー
 1. ユーザーがWeb UIでタスク作成
 2. APIがタスクをMongoDBに保存
-3. keruta-executorがタスクキューを監視・管理
-4. executorがWorker Podにタスクを割り当て
+3. keruta-coder-providerがタスクキューを監視・管理
+4. keruta-coder-providerがWorker Podにタスクを割り当て
 5. Worker Pod（Coder + keruta-agent）がタスク処理
 6. Coder環境でJob Podを作成してタスク実行
 7. keruta-agentが実行結果を収集

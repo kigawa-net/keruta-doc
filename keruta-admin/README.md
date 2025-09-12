@@ -60,7 +60,7 @@ export VITE_OPENAPI_SPEC_URL=https://api.keruta.example.com/openapi.json
 
 # サーバーサイド専用設定
 export KEYCLOAK_CLIENT_SECRET=your-ssr-client-secret
-export SESSION_SECRET=your-session-secret-key
+export QUEUE_SECRET=your-queue-secret-key
 ```
 
 ##### OpenAPI TypeScript生成設定（package.json）
@@ -114,12 +114,12 @@ export const keycloakConfig = {
 ```typescript
 // React Router v7 SSR対応認証
 import { redirect, type LoaderFunctionArgs } from "react-router";
-import { getSession, commitSession } from "./sessions.server";
+import { getQueue, commitQueue } from "./queues.server";
 import jwt from "jsonwebtoken";
 
 export async function requireAuth(request: Request) {
-  const session = await getSession(request.headers.get("Cookie"));
-  const token = session.get("access_token");
+  const queue = await getQueue(request.headers.get("Cookie"));
+  const token = queue.get("access_token");
 
   if (!token) {
     // Keycloak認証へリダイレクト
@@ -173,13 +173,13 @@ export async function handleAuthCallback(request: Request) {
 
   const tokens = await tokenResponse.json();
   
-  // セッションに保存
-  const session = await getSession(request.headers.get("Cookie"));
-  session.set("access_token", tokens.access_token);
-  session.set("refresh_token", tokens.refresh_token);
+  // キューに保存
+  const queue = await getQueue(request.headers.get("Cookie"));
+  queue.set("access_token", tokens.access_token);
+  queue.set("refresh_token", tokens.refresh_token);
 
   return redirect(state || "/", {
-    headers: { "Set-Cookie": await commitSession(session) },
+    headers: { "Set-Cookie": await commitQueue(queue) },
   });
 }
 ```
@@ -209,8 +209,8 @@ export const initKeycloakClient = async (): Promise<Keycloak> => {
     });
 
     if (authenticated) {
-      // サーバーセッションと同期
-      await syncWithServerSession();
+      // サーバーキューと同期
+      await syncWithServerQueue();
     }
 
     return keycloak;
@@ -220,8 +220,8 @@ export const initKeycloakClient = async (): Promise<Keycloak> => {
   }
 };
 
-async function syncWithServerSession() {
-  // サーバーサイドセッションとクライアントサイドトークンを同期
+async function syncWithServerQueue() {
+  // サーバーサイドキューとクライアントサイドトークンを同期
   if (keycloak?.token) {
     await fetch('/auth/sync', {
       method: 'POST',
@@ -390,7 +390,7 @@ export default PrivateRoute;
 ##### SPA認証機能
 - **Keycloak JavaScript Adapter**: ブラウザベースのOpenID Connect認証フロー
 - **PKCE対応**: セキュリティ強化されたSPA向け認証フロー
-- **自動トークン更新**: リフレッシュトークンによるシームレスなセッション延長
+- **自動トークン更新**: リフレッシュトークンによるシームレスなキュー延長
 - **ルートベース認証**: React Routerと連携した認証保護されたページアクセス
 
 ##### クライアントサイドAPI認証
@@ -457,7 +457,7 @@ kerutaシステムでは、ユーザーごとのタスク分離により、各�
 - **HTTPS通信**: 本番環境では必ずHTTPS利用（TLS 1.2以上推奨）
 - **クライアントシークレット管理**: 機密情報として適切に保護・管理
 - **最小権限の原則**: ユーザーには必要最小限の権限のみ付与
-- **セッションセキュリティ**: 適切なタイムアウト設定、セッション無効化機能
+- **キューセキュリティ**: 適切なタイムアウト設定、キュー無効化機能
 - **監査ログ**: 認証・認可イベントの完全なログ記録
 
 ### セットアップ手順
@@ -983,7 +983,7 @@ const example = async () => {
 
 3. **トークン更新エラー**
    - 原因: リフレッシュトークンが期限切れまたは無効
-   - 解決策: Keycloak設定でセッションアイドルタイムアウトを確認、必要に応じて再ログイン
+   - 解決策: Keycloak設定でキューアイドルタイムアウトを確認、必要に応じて再ログイン
 
 4. **ルートアクセスエラー (403 Forbidden)**
    - 原因: ユーザーに適切なロールが割り当てられていない

@@ -353,4 +353,4 @@ resources {
 - [Coderテンプレート利用制約仕様](./system/coderTemplateSpec.md)
 - [Coder Template Documentation](https://coder.com/docs/coder-oss/templates)
 - [Kubernetes Provider for Terraform](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs)
-- [Session-Workspace同期APIシステム](../../session-workspace-sync-system.md)
+- [Queue-Workspace同期APIシステム](../../queue-workspace-sync-system.md)

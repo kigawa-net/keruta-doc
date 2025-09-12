@@ -18,7 +18,7 @@ import java.time.LocalDateTime
 data class Task(
     @Id
     val id: String = "",
-    val sessionId: String, // セッションID
+    val queueId: String, // キューID
     val parentTaskId: String? = null, // 親タスクID
     val name: String, // タスク名
     val description: String = "", // タスク説明

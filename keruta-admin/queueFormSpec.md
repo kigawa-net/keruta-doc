@@ -1,8 +1,8 @@
-# セッション関連フォーム仕様
+# キュー関連フォーム仕様
 
 ## 概要
 
-Keruta Admin パネルにおけるセッション管理フォームの詳細仕様書です。Remix.js と Tailwind CSS を使用したモダンな実装で、セッションの作成・編集・管理を行います。
+Keruta Admin パネルにおけるキュー管理フォームの詳細仕様書です。Remix.js と Tailwind CSS を使用したモダンな実装で、キューの作成・編集・管理を行います。
 
 ## 技術スタック
 
@@ -11,28 +11,28 @@ Keruta Admin パネルにおけるセッション管理フォームの詳細仕�
 - **言語**: TypeScript
 - **ビルドツール**: Remix CLI
 
-## セッション管理画面構成
+## キュー管理画面構成
 
 ### 画面一覧
 
 | 画面名 | パス | 説明 |
 |---|---|---|
-| セッション一覧 | `/sessions` | セッションの一覧表示・検索・フィルタリング |
-| セッション詳細 | `/sessions/:id` | セッション詳細情報・関連ワークスペース表示 |
-| セッション作成 | `/sessions/new` | 新規セッション作成フォーム |
-| セッション編集 | `/sessions/:id/edit` | 既存セッション編集フォーム |
+| キュー一覧 | `/queues` | キューの一覧表示・検索・フィルタリング |
+| キュー詳細 | `/queues/:id` | キュー詳細情報・関連ワークスペース表示 |
+| キュー作成 | `/queues/new` | 新規キュー作成フォーム |
+| キュー編集 | `/queues/:id/edit` | 既存キュー編集フォーム |
 
-## セッション一覧画面仕様
+## キュー一覧画面仕様
 
 ### レイアウト
 
 ```tsx
-// sessions/index.tsx
+// queues/index.tsx
 <div className="min-h-screen bg-gray-50">
   <div className="container mx-auto px-4 py-6">
-    <PageHeader title="セッション管理" />
-    <SessionFilters />
-    <SessionTable />
+    <PageHeader title="キュー管理" />
+    <QueueFilters />
+    <QueueTable />
     <Pagination />
   </div>
 </div>
@@ -40,15 +40,15 @@ Keruta Admin パネルにおけるセッション管理フォームの詳細仕�
 
 ### フィルタリング機能
 
-#### SessionFilters コンポーネント
+#### QueueFilters コンポーネント
 
 ```tsx
-interface SessionFiltersProps {
-  filters: SessionFilters;
-  onFiltersChange: (filters: SessionFilters) => void;
+interface QueueFiltersProps {
+  filters: QueueFilters;
+  onFiltersChange: (filters: QueueFilters) => void;
 }
 
-interface SessionFilters {
+interface QueueFilters {
   status: 'ALL' | 'PENDING' | 'ACTIVE' | 'COMPLETED' | 'TERMINATED';
   name: string;
   tags: string[];
@@ -61,20 +61,20 @@ interface SessionFilters {
 
 | フィールド | 入力タイプ | 説明 |
 |---|---|---|
-| ステータス | ドロップダウン | セッションステータスで絞り込み |
-| セッション名 | テキスト入力 | 部分一致検索 |
+| ステータス | ドロップダウン | キューステータスで絞り込み |
+| キュー名 | テキスト入力 | 部分一致検索 |
 | タグ | タグセレクト | 複数選択可能 |
 | 作成日（開始） | 日付選択 | 作成日範囲の開始日 |
 | 作成日（終了） | 日付選択 | 作成日範囲の終了日 |
 
 ### テーブル表示
 
-#### SessionTable コンポーネント
+#### QueueTable コンポーネント
 
 | カラム | 表示内容 | ソート | 説明 |
 |---|---|---|---|
-| ID | セッションID（8桁） | × | セッション識別子（短縮表示） |
-| 名前 | セッション名 | ○ | リンククリックで詳細画面へ |
+| ID | キューID（8桁） | × | キュー識別子（短縮表示） |
+| 名前 | キュー名 | ○ | リンククリックで詳細画面へ |
 | ステータス | バッジ表示 | ○ | PENDING/ACTIVE/COMPLETED/TERMINATED |
 | タグ | タグバッジ | × | 最大3個まで表示、超過分は "+N" |
 | 作成日時 | 相対時間表示 | ○ | "2時間前", "3日前" 等 |
@@ -100,14 +100,14 @@ const StatusBadge = ({ status }: { status: string }) => {
 };
 ```
 
-## セッション作成フォーム仕様
+## キュー作成フォーム仕様
 
 ### フォーム構成
 
-#### CreateSessionForm コンポーネント
+#### CreateQueueForm コンポーネント
 
 ```tsx
-interface CreateSessionRequest {
+interface CreateQueueRequest {
   name: string;
   description?: string;
   tags: string[];
@@ -118,8 +118,8 @@ interface CreateSessionRequest {
 
 | フィールド | 入力タイプ | 必須 | バリデーション | 説明 |
 |---|---|---|---|---|
-| セッション名 | テキスト入力 | ✓ | 3-50文字、英数字・ハイフン・アンダースコア | ワークスペース名に使用 |
-| 説明 | テキストエリア | - | 最大500文字 | セッション用途の説明 |
+| キュー名 | テキスト入力 | ✓ | 3-50文字、英数字・ハイフン・アンダースコア | ワークスペース名に使用 |
+| 説明 | テキストエリア | - | 最大500文字 | キュー用途の説明 |
 | タグ | タグ入力 | - | 各タグ1-20文字、最大10個 | 分類・検索用 |
 
 ### バリデーション仕様
@@ -127,13 +127,13 @@ interface CreateSessionRequest {
 #### フロントエンド検証
 
 ```tsx
-const sessionFormSchema = {
+const queueFormSchema = {
   name: {
     required: true,
     minLength: 3,
     maxLength: 50,
     pattern: /^[a-zA-Z0-9\-_]+$/,
-    message: 'セッション名は3-50文字の英数字・ハイフン・アンダースコアで入力してください'
+    message: 'キュー名は3-50文字の英数字・ハイフン・アンダースコアで入力してください'
   },
   description: {
     maxLength: 500,
@@ -151,29 +151,29 @@ const sessionFormSchema = {
 #### サーバーサイド検証
 
 ```tsx
-// sessions/new.tsx action
+// queues/new.tsx action
 export const action = async ({ request }: ActionFunctionArgs) => {
   const formData = await request.formData();
-  const sessionData = Object.fromEntries(formData);
+  const queueData = Object.fromEntries(formData);
   
   // バリデーション
-  const errors = validateSessionData(sessionData);
+  const errors = validateQueueData(queueData);
   if (Object.keys(errors).length > 0) {
     return json({ errors }, { status: 400 });
   }
   
   try {
-    const response = await fetch(`${API_BASE_URL}/api/v1/sessions`, {
+    const response = await fetch(`${API_BASE_URL}/api/v1/queues`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(sessionData)
+      body: JSON.stringify(queueData)
     });
     
     if (!response.ok) {
-      throw new Error('セッション作成に失敗しました');
+      throw new Error('キュー作成に失敗しました');
     }
     
-    return redirect('/sessions');
+    return redirect('/queues');
   } catch (error) {
     return json({ error: error.message }, { status: 500 });
   }
@@ -189,7 +189,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
     <div className="md:col-span-1">
       <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-        セッション名 <span className="text-red-600">*</span>
+        キュー名 <span className="text-red-600">*</span>
       </label>
       <input
         type="text"
@@ -200,7 +200,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         maxLength={50}
       />
       <div className="mt-1 text-sm text-red-600 hidden peer-invalid:block">
-        セッション名を入力してください
+        キュー名を入力してください
       </div>
     </div>
   </div>
@@ -227,7 +227,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   
   <div className="flex flex-col sm:flex-row justify-between gap-4 mt-8">
     <Link 
-      to="/sessions" 
+      to="/queues" 
       className="px-6 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-md text-center transition-colors"
     >
       キャンセル
@@ -242,15 +242,15 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 </Form>
 ```
 
-## セッション詳細画面仕様
+## キュー詳細画面仕様
 
 ### 詳細情報表示
 
-#### SessionDetail コンポーネント
+#### QueueDetail コンポーネント
 
 ```tsx
-interface SessionDetailProps {
-  session: SessionResponse;
+interface QueueDetailProps {
+  queue: QueueResponse;
   workspaces: CoderWorkspaceResponse[];
 }
 ```
@@ -259,8 +259,8 @@ interface SessionDetailProps {
 
 | セクション | 項目 | 表示形式 |
 |---|---|---|
-| 基本情報 | セッションID | 全桁表示 |
-|  | セッション名 | テキスト |
+| 基本情報 | キューID | 全桁表示 |
+|  | キュー名 | テキスト |
 |  | 説明 | テキスト（改行対応） |
 |  | ステータス | バッジ |
 |  | タグ | タグバッジ |
@@ -279,7 +279,7 @@ interface SessionDetailProps {
 | 最終使用 | 最終アクセス時間 | 相対時間表示 |
 | アクション | 操作ボタン | 開始・停止・アクセス |
 
-## セッション編集フォーム仕様
+## キュー編集フォーム仕様
 
 ### 編集制約
 
@@ -287,15 +287,15 @@ interface SessionDetailProps {
 
 | 項目 | 編集可否 | 理由 |
 |---|---|---|
-| セッション名 | × | ワークスペース名に影響するため |
+| キュー名 | × | ワークスペース名に影響するため |
 | 説明 | ○ | 変更可能 |
 | タグ | ○ | 変更可能 |
 | ステータス | × | システムが自動管理 |
 
-#### EditSessionForm コンポーネント
+#### EditQueueForm コンポーネント
 
 ```tsx
-interface UpdateSessionRequest {
+interface UpdateQueueRequest {
   description?: string;
   tags: string[];
 }
@@ -307,17 +307,17 @@ interface UpdateSessionRequest {
 <Form method="put" className="max-w-2xl mx-auto p-8 bg-white shadow-lg rounded-lg">
   <div className="mb-6">
     <label className="block text-sm font-medium text-gray-700 mb-2">
-      セッション名
+      キュー名
     </label>
     <input
       type="text"
       className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md cursor-not-allowed text-gray-600"
-      value={session.name}
+      value={queue.name}
       disabled
       readOnly
     />
     <div className="mt-1 text-sm text-gray-600">
-      セッション名は変更できません
+      キュー名は変更できません
     </div>
   </div>
   
@@ -329,7 +329,7 @@ interface UpdateSessionRequest {
       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
       id="description"
       name="description"
-      defaultValue={session.description}
+      defaultValue={queue.description}
       rows={3}
       maxLength={500}
     />
@@ -341,14 +341,14 @@ interface UpdateSessionRequest {
     </label>
     <TagInput 
       name="tags" 
-      defaultValue={session.tags}
+      defaultValue={queue.tags}
       maxTags={10} 
     />
   </div>
   
   <div className="flex flex-col sm:flex-row justify-between gap-4 mt-8">
     <Link 
-      to={`/sessions/${session.id}`} 
+      to={`/queues/${queue.id}`} 
       className="px-6 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-md text-center transition-colors"
     >
       キャンセル
@@ -442,19 +442,19 @@ const TagInput: React.FC<TagInputProps> = ({
 
 | 画面操作 | HTTPメソッド | エンドポイント | 説明 |
 |---|---|---|---|
-| 一覧取得 | GET | `/api/v1/sessions` | フィルタリング・ページング対応 |
-| 詳細取得 | GET | `/api/v1/sessions/:id` | セッション詳細情報 |
-| 作成 | POST | `/api/v1/sessions` | 新規セッション作成 |
-| 更新 | PUT | `/api/v1/sessions/:id` | セッション情報更新（制限あり） |
-| 削除 | DELETE | `/api/v1/sessions/:id` | セッション削除 |
-| ワークスペース取得 | GET | `/api/v1/sessions/:id/workspaces` | 関連ワークスペース |
+| 一覧取得 | GET | `/api/v1/queues` | フィルタリング・ページング対応 |
+| 詳細取得 | GET | `/api/v1/queues/:id` | キュー詳細情報 |
+| 作成 | POST | `/api/v1/queues` | 新規キュー作成 |
+| 更新 | PUT | `/api/v1/queues/:id` | キュー情報更新（制限あり） |
+| 削除 | DELETE | `/api/v1/queues/:id` | キュー削除 |
+| ワークスペース取得 | GET | `/api/v1/queues/:id/workspaces` | 関連ワークスペース |
 
 ### エラーハンドリング
 
 #### API エラー対応
 
 ```tsx
-// sessions/routes.tsx
+// queues/routes.tsx
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   try {
     const url = new URL(request.url);
@@ -465,17 +465,17 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       name: url.searchParams.get('name') || ''
     });
     
-    const response = await fetch(`${API_BASE_URL}/api/v1/sessions?${params}`);
+    const response = await fetch(`${API_BASE_URL}/api/v1/queues?${params}`);
     
     if (!response.ok) {
-      throw new Response('セッション一覧の取得に失敗しました', { 
+      throw new Response('キュー一覧の取得に失敗しました', { 
         status: response.status 
       });
     }
     
     return json(await response.json());
   } catch (error) {
-    console.error('Sessions loader error:', error);
+    console.error('Queues loader error:', error);
     throw new Response('サーバーエラーが発生しました', { status: 500 });
   }
 };
@@ -503,11 +503,11 @@ const ErrorMessage: React.FC<{ error?: string }> = ({ error }) => {
 
 | 操作 | 管理者 (admin) | 開発者 (developer) | 一般ユーザー (user) |
 |---|:-:|:-:|:-:|
-| セッション一覧閲覧 | ○ | ○ | ○ |
-| セッション詳細閲覧 | ○ | ○ | ○ |
-| セッション作成 | ○ | ○ | △（制限あり） |
-| セッション編集 | ○ | ○ | △（自分のみ） |
-| セッション削除 | ○ | × | × |
+| キュー一覧閲覧 | ○ | ○ | ○ |
+| キュー詳細閲覧 | ○ | ○ | ○ |
+| キュー作成 | ○ | ○ | △（制限あり） |
+| キュー編集 | ○ | ○ | △（自分のみ） |
+| キュー削除 | ○ | × | × |
 | ワークスペース操作 | ○ | ○ | △（自分のみ） |
 
 ### 認証・認可実装
@@ -515,8 +515,8 @@ const ErrorMessage: React.FC<{ error?: string }> = ({ error }) => {
 ```tsx
 // app/utils/auth.server.ts
 export const requireUser = async (request: Request) => {
-  const session = await getSession(request.headers.get('Cookie'));
-  const token = session.get('access_token');
+  const queue = await getQueue(request.headers.get('Cookie'));
+  const token = queue.get('access_token');
   
   if (!token) {
     throw redirect('/auth/login');
@@ -551,30 +551,30 @@ export const requireRole = (allowedRoles: string[]) => {
 ### モバイル最適化
 
 ```tsx
-// SessionCard コンポーネント（モバイル用）
-const SessionCard: React.FC<{ session: SessionResponse }> = ({ session }) => (
+// QueueCard コンポーネント（モバイル用）
+const QueueCard: React.FC<{ queue: QueueResponse }> = ({ queue }) => (
   <div className="bg-white border border-gray-200 rounded-lg mb-4 block md:hidden">
     <div className="p-4">
       <div className="flex justify-between items-start mb-2">
-        <h6 className="text-lg font-semibold text-gray-900">{session.name}</h6>
-        <StatusBadge status={session.status} />
+        <h6 className="text-lg font-semibold text-gray-900">{queue.name}</h6>
+        <StatusBadge status={queue.status} />
       </div>
       
-      <p className="text-gray-600 text-sm mb-4 leading-relaxed">{session.description}</p>
+      <p className="text-gray-600 text-sm mb-4 leading-relaxed">{queue.description}</p>
       
       <div className="flex justify-between items-center">
         <small className="text-gray-600 text-sm">
-          {formatDistanceToNow(new Date(session.createdAt))}前
+          {formatDistanceToNow(new Date(queue.createdAt))}前
         </small>
         <div className="flex flex-col sm:flex-row gap-2">
           <Link 
-            to={`/sessions/${session.id}`} 
+            to={`/queues/${queue.id}`} 
             className="px-3 py-1.5 text-blue-600 border border-blue-600 hover:bg-blue-50 rounded text-center text-sm transition-colors"
           >
             詳細
           </Link>
           <Link 
-            to={`/sessions/${session.id}/edit`} 
+            to={`/queues/${queue.id}/edit`} 
             className="px-3 py-1.5 text-gray-600 border border-gray-600 hover:bg-gray-50 rounded text-center text-sm transition-colors"
           >
             編集
@@ -592,7 +592,7 @@ const SessionCard: React.FC<{ session: SessionResponse }> = ({ session }) => (
 
 - **ページング**: デフォルト20件、最大100件
 - **遅延読み込み**: ワークスペース情報は詳細画面で取得
-- **キャッシュ**: セッション一覧は5分間キャッシュ
+- **キャッシュ**: キュー一覧は5分間キャッシュ
 - **検索デバウンス**: 名前検索は300ms遅延
 
 ### フォーム最適化
@@ -603,7 +603,7 @@ const SessionCard: React.FC<{ session: SessionResponse }> = ({ session }) => (
 
 ## 関連ドキュメント
 
-- [Session-Workspace同期APIシステム](../../session-workspace-sync-system.md)
+- [Queue-Workspace同期APIシステム](../../queue-workspace-sync-system.md)
 - [管理パネルドキュメント](./adminPanel.md)
 - [管理パネルのRemix実装](./adminPanelRemix.md)
 - [Coderテンプレート利用制約仕様](../keruta-api/system/coderTemplateSpec.md)

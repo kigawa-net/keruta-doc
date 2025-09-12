@@ -249,7 +249,7 @@ components:
         registeredAt:
           format: date-time
           type: string
-        sessionId:
+        queueId:
           type: string
         statistics:
           $ref: '#/components/schemas/AgentStatisticsResponse'
@@ -504,7 +504,7 @@ components:
       - tags
       - url
       type: object
-    CreateSessionRequest:
+    CreateQueueRequest:
       properties:
         description:
           type: string
@@ -515,7 +515,7 @@ components:
             type: string
           type: array
         templateConfig:
-          $ref: '#/components/schemas/SessionTemplateConfigRequest'
+          $ref: '#/components/schemas/QueueTemplateConfigRequest'
       required:
       - name
       - tags
@@ -548,7 +548,7 @@ components:
           type: integer
         script:
           type: string
-        sessionId:
+        queueId:
           type: string
         tags:
           items:
@@ -564,7 +564,7 @@ components:
       - parameters
       - priority
       - script
-      - sessionId
+      - queueId
       - tags
       type: object
     CreateTemplateRequest:
@@ -592,7 +592,7 @@ components:
           additionalProperties:
             type: string
           type: object
-        sessionId:
+        queueId:
           type: string
         templateId:
           type: string
@@ -605,7 +605,7 @@ components:
       - automaticUpdates
       - name
       - richParameterValues
-      - sessionId
+      - queueId
       type: object
     CreateWorkspaceTemplateParameterRequest:
       properties:
@@ -898,7 +898,7 @@ components:
       - updatedAt
       - url
       type: object
-    SessionDetailResponse:
+    QueueDetailResponse:
       properties:
         createdAt:
           format: date-time
@@ -919,10 +919,10 @@ components:
           format: date-time
           type: string
         workspaceStats:
-          $ref: '#/components/schemas/SessionWorkspaceStats'
+          $ref: '#/components/schemas/QueueWorkspaceStats'
         workspaces:
           items:
-            $ref: '#/components/schemas/SessionWorkspaceDetail'
+            $ref: '#/components/schemas/QueueWorkspaceDetail'
           type: array
       required:
       - createdAt
@@ -934,7 +934,7 @@ components:
       - workspaceStats
       - workspaces
       type: object
-    SessionResponse:
+    QueueResponse:
       properties:
         createdAt:
           format: date-time
@@ -952,13 +952,13 @@ components:
             type: string
           type: array
         templateConfig:
-          $ref: '#/components/schemas/SessionTemplateConfigResponse'
+          $ref: '#/components/schemas/QueueTemplateConfigResponse'
         updatedAt:
           format: date-time
           type: string
         workspaces:
           items:
-            $ref: '#/components/schemas/SessionWorkspaceInfo'
+            $ref: '#/components/schemas/QueueWorkspaceInfo'
           type: array
       required:
       - createdAt
@@ -969,7 +969,7 @@ components:
       - updatedAt
       - workspaces
       type: object
-    SessionTemplateConfigRequest:
+    QueueTemplateConfigRequest:
       properties:
         parameters:
           additionalProperties:
@@ -995,7 +995,7 @@ components:
       - repositoryRef
       - templatePath
       type: object
-    SessionTemplateConfigResponse:
+    QueueTemplateConfigResponse:
       properties:
         parameters:
           additionalProperties:
@@ -1021,7 +1021,7 @@ components:
       - repositoryRef
       - templatePath
       type: object
-    SessionWorkspaceDetail:
+    QueueWorkspaceDetail:
       properties:
         actions:
           items:
@@ -1063,7 +1063,7 @@ components:
       - name
       - status
       type: object
-    SessionWorkspaceInfo:
+    QueueWorkspaceInfo:
       properties:
         createdAt:
           format: date-time
@@ -1085,7 +1085,7 @@ components:
       - name
       - status
       type: object
-    SessionWorkspaceStats:
+    QueueWorkspaceStats:
       properties:
         deleting:
           format: int32
@@ -1170,7 +1170,7 @@ components:
           type: integer
         script:
           type: string
-        sessionId:
+        queueId:
           type: string
         startedAt:
           format: date-time
@@ -1210,7 +1210,7 @@ components:
       - priority
       - retryCount
       - script
-      - sessionId
+      - queueId
       - status
       - tags
       - updatedAt
@@ -1332,7 +1332,7 @@ components:
         url:
           type: string
       type: object
-    UpdateSessionRequest:
+    UpdateQueueRequest:
       properties:
         description:
           type: string
@@ -1343,7 +1343,7 @@ components:
             type: string
           type: array
         templateConfig:
-          $ref: '#/components/schemas/SessionTemplateConfigRequest'
+          $ref: '#/components/schemas/QueueTemplateConfigRequest'
       required:
       - name
       - tags
@@ -1563,7 +1563,7 @@ components:
           additionalProperties:
             type: string
           type: object
-        sessionId:
+        queueId:
           type: string
         startedAt:
           format: date-time
@@ -1600,7 +1600,7 @@ components:
       - metadata
       - name
       - richParameterValues
-      - sessionId
+      - queueId
       - status
       - updatedAt
       type: object
@@ -1725,7 +1725,7 @@ paths:
         schema:
           type: string
       - in: query
-        name: sessionId
+        name: queueId
         required: false
         schema:
           type: string
@@ -1925,7 +1925,7 @@ paths:
         schema:
           type: string
       - in: query
-        name: sessionId
+        name: queueId
         required: true
         schema:
           type: string
@@ -2666,45 +2666,45 @@ paths:
       summary: リポジトリ状態切り替え
       tags:
       - Repository Management
-  /api/v1/sessions:
+  /api/v1/queues:
     get:
-      description: Retrieves all sessions in the system
-      operationId: getAllSessions
+      description: Retrieves all queues in the system
+      operationId: getAllQueues
       responses:
         '200':
           content:
             '*/*':
               schema:
                 items:
-                  $ref: '#/components/schemas/SessionResponse'
+                  $ref: '#/components/schemas/QueueResponse'
                 type: array
           description: OK
-      summary: Get all sessions
+      summary: Get all queues
       tags:
-      - Session
+      - Queue
     post:
-      description: Creates a new session in the system
-      operationId: createSession
+      description: Creates a new queue in the system
+      operationId: createQueue
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateSessionRequest'
+              $ref: '#/components/schemas/CreateQueueRequest'
         required: true
       responses:
         '200':
           content:
             '*/*':
               schema:
-                $ref: '#/components/schemas/SessionResponse'
+                $ref: '#/components/schemas/QueueResponse'
           description: OK
-      summary: Create a new session
+      summary: Create a new queue
       tags:
-      - Session
-  /api/v1/sessions/by-workspace/{workspaceId}:
+      - Queue
+  /api/v1/queues/by-workspace/{workspaceId}:
     get:
-      description: Retrieves a session by its associated workspace ID
-      operationId: getSessionByWorkspaceId
+      description: Retrieves a queue by its associated workspace ID
+      operationId: getQueueByWorkspaceId
       parameters:
       - in: path
         name: workspaceId
@@ -2716,12 +2716,12 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: '#/components/schemas/SessionResponse'
+                $ref: '#/components/schemas/QueueResponse'
           description: OK
-      summary: Get session by workspace ID
+      summary: Get queue by workspace ID
       tags:
-      - Session
-  /api/v1/sessions/realtime/config:
+      - Queue
+  /api/v1/queues/realtime/config:
     get:
       operationId: getRealtimeConfig
       responses:
@@ -2734,13 +2734,13 @@ paths:
                 type: object
           description: OK
       tags:
-      - session-realtime-controller
-  /api/v1/sessions/realtime/events:
+      - queue-realtime-controller
+  /api/v1/queues/realtime/events:
     get:
-      operationId: streamSessionEvents
+      operationId: streamQueueEvents
       parameters:
       - in: query
-        name: sessionId
+        name: queueId
         required: false
         schema:
           type: string
@@ -2752,8 +2752,8 @@ paths:
                 $ref: '#/components/schemas/SseEmitter'
           description: OK
       tags:
-      - session-realtime-controller
-  /api/v1/sessions/realtime/health:
+      - queue-realtime-controller
+  /api/v1/queues/realtime/health:
     get:
       operationId: getRealtimeHealth
       responses:
@@ -2766,8 +2766,8 @@ paths:
                 type: object
           description: OK
       tags:
-      - session-realtime-controller
-  /api/v1/sessions/realtime/stats:
+      - queue-realtime-controller
+  /api/v1/queues/realtime/stats:
     get:
       operationId: getConnectionStats
       responses:
@@ -2780,13 +2780,13 @@ paths:
                 type: object
           description: OK
       tags:
-      - session-realtime-controller
-  /api/v1/sessions/realtime/test/{sessionId}:
+      - queue-realtime-controller
+  /api/v1/queues/realtime/test/{queueId}:
     post:
       operationId: sendTestBroadcast
       parameters:
       - in: path
-        name: sessionId
+        name: queueId
         required: true
         schema:
           type: string
@@ -2806,11 +2806,11 @@ paths:
                 type: object
           description: OK
       tags:
-      - session-realtime-controller
-  /api/v1/sessions/search:
+      - queue-realtime-controller
+  /api/v1/queues/search:
     get:
-      description: Searches sessions by name pattern
-      operationId: searchSessionsByName
+      description: Searches queues by name pattern
+      operationId: searchQueuesByName
       parameters:
       - in: query
         name: name
@@ -2823,16 +2823,16 @@ paths:
             '*/*':
               schema:
                 items:
-                  $ref: '#/components/schemas/SessionResponse'
+                  $ref: '#/components/schemas/QueueResponse'
                 type: array
           description: OK
-      summary: Search sessions by name
+      summary: Search queues by name
       tags:
-      - Session
-  /api/v1/sessions/status/{status}:
+      - Queue
+  /api/v1/queues/status/{status}:
     get:
-      description: Retrieves all sessions with a specific status
-      operationId: getSessionsByStatus
+      description: Retrieves all queues with a specific status
+      operationId: getQueuesByStatus
       parameters:
       - in: path
         name: status
@@ -2845,16 +2845,16 @@ paths:
             '*/*':
               schema:
                 items:
-                  $ref: '#/components/schemas/SessionResponse'
+                  $ref: '#/components/schemas/QueueResponse'
                 type: array
           description: OK
-      summary: Get sessions by status
+      summary: Get queues by status
       tags:
-      - Session
-  /api/v1/sessions/tag/{tag}:
+      - Queue
+  /api/v1/queues/tag/{tag}:
     get:
-      description: Retrieves all sessions with a specific tag
-      operationId: getSessionsByTag
+      description: Retrieves all queues with a specific tag
+      operationId: getQueuesByTag
       parameters:
       - in: path
         name: tag
@@ -2867,16 +2867,16 @@ paths:
             '*/*':
               schema:
                 items:
-                  $ref: '#/components/schemas/SessionResponse'
+                  $ref: '#/components/schemas/QueueResponse'
                 type: array
           description: OK
-      summary: Get sessions by tag
+      summary: Get queues by tag
       tags:
-      - Session
-  /api/v1/sessions/{id}:
+      - Queue
+  /api/v1/queues/{id}:
     delete:
-      description: Deletes a specific session
-      operationId: deleteSession
+      description: Deletes a specific queue
+      operationId: deleteQueue
       parameters:
       - in: path
         name: id
@@ -2886,12 +2886,12 @@ paths:
       responses:
         '200':
           description: OK
-      summary: Delete session
+      summary: Delete queue
       tags:
-      - Session
+      - Queue
     get:
-      description: Retrieves a specific session by its ID
-      operationId: getSessionById
+      description: Retrieves a specific queue by its ID
+      operationId: getQueueById
       parameters:
       - in: path
         name: id
@@ -2903,14 +2903,14 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: '#/components/schemas/SessionResponse'
+                $ref: '#/components/schemas/QueueResponse'
           description: OK
-      summary: Get session by ID
+      summary: Get queue by ID
       tags:
-      - Session
+      - Queue
     put:
-      description: Updates an existing session (status changes are not allowed)
-      operationId: updateSession
+      description: Updates an existing queue (status changes are not allowed)
+      operationId: updateQueue
       parameters:
       - in: path
         name: id
@@ -2921,22 +2921,22 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateSessionRequest'
+              $ref: '#/components/schemas/UpdateQueueRequest'
         required: true
       responses:
         '200':
           content:
             '*/*':
               schema:
-                $ref: '#/components/schemas/SessionResponse'
+                $ref: '#/components/schemas/QueueResponse'
           description: OK
-      summary: Update session
+      summary: Update queue
       tags:
-      - Session
-  /api/v1/sessions/{id}/detail:
+      - Queue
+  /api/v1/queues/{id}/detail:
     get:
-      description: Retrieves detailed information about a session including workspaces
-      operationId: getSessionDetail
+      description: Retrieves detailed information about a queue including workspaces
+      operationId: getQueueDetail
       parameters:
       - in: path
         name: id
@@ -2948,15 +2948,15 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: '#/components/schemas/SessionDetailResponse'
+                $ref: '#/components/schemas/QueueDetailResponse'
           description: OK
-      summary: Get session detail
+      summary: Get queue detail
       tags:
-      - Session Detail
-  /api/v1/sessions/{id}/monitor-workspaces:
+      - Queue Detail
+  /api/v1/queues/{id}/monitor-workspaces:
     post:
-      description: 'Stub: Workspace monitoring moved to keruta-executor'
-      operationId: monitorSessionWorkspaces
+      description: 'Stub: Workspace monitoring moved to keruta-coder-provider'
+      operationId: monitorQueueWorkspaces
       parameters:
       - in: path
         name: id
@@ -2966,13 +2966,13 @@ paths:
       responses:
         '200':
           description: OK
-      summary: Monitor session workspaces
+      summary: Monitor queue workspaces
       tags:
-      - Session
-  /api/v1/sessions/{id}/status:
+      - Queue
+  /api/v1/queues/{id}/status:
     put:
       description: Internal API - Status updates are managed by the system
-      operationId: updateSessionStatus
+      operationId: updateQueueStatus
       parameters:
       - in: path
         name: id
@@ -2996,13 +2996,13 @@ paths:
                   type: string
                 type: object
           description: OK
-      summary: Update session status
+      summary: Update queue status
       tags:
-      - Session
-  /api/v1/sessions/{id}/sync-status:
+      - Queue
+  /api/v1/queues/{id}/sync-status:
     post:
-      description: Synchronizes session status with workspace states
-      operationId: syncSessionStatus
+      description: Synchronizes queue status with workspace states
+      operationId: syncQueueStatus
       parameters:
       - in: path
         name: id
@@ -3014,15 +3014,15 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: '#/components/schemas/SessionResponse'
+                $ref: '#/components/schemas/QueueResponse'
           description: OK
-      summary: Sync session status
+      summary: Sync queue status
       tags:
-      - Session
-  /api/v1/sessions/{id}/tags:
+      - Queue
+  /api/v1/queues/{id}/tags:
     post:
-      description: Adds a tag to a specific session
-      operationId: addTagToSession
+      description: Adds a tag to a specific queue
+      operationId: addTagToQueue
       parameters:
       - in: path
         name: id
@@ -3042,15 +3042,15 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: '#/components/schemas/SessionResponse'
+                $ref: '#/components/schemas/QueueResponse'
           description: OK
-      summary: Add tag to session
+      summary: Add tag to queue
       tags:
-      - Session
-  /api/v1/sessions/{id}/tags/{tag}:
+      - Queue
+  /api/v1/queues/{id}/tags/{tag}:
     delete:
-      description: Removes a tag from a specific session
-      operationId: removeTagFromSession
+      description: Removes a tag from a specific queue
+      operationId: removeTagFromQueue
       parameters:
       - in: path
         name: id
@@ -3067,15 +3067,15 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: '#/components/schemas/SessionResponse'
+                $ref: '#/components/schemas/QueueResponse'
           description: OK
-      summary: Remove tag from session
+      summary: Remove tag from queue
       tags:
-      - Session
-  /api/v1/sessions/{id}/workspace:
+      - Queue
+  /api/v1/queues/{id}/workspace:
     get:
-      description: Gets the single workspace for a specific session
-      operationId: getSessionWorkspace
+      description: Gets the single workspace for a specific queue
+      operationId: getQueueWorkspace
       parameters:
       - in: path
         name: id
@@ -3089,9 +3089,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/WorkspaceResponse'
           description: OK
-      summary: Get session workspace
+      summary: Get queue workspace
       tags:
-      - Session
+      - Queue
   /api/v1/tasks:
     get:
       description: Retrieves all tasks in the system
@@ -3149,13 +3149,13 @@ paths:
       summary: Search tasks by name
       tags:
       - Task
-  /api/v1/tasks/session/{sessionId}:
+  /api/v1/tasks/queue/{queueId}:
     get:
-      description: Retrieves all tasks for a specific session
-      operationId: getTasksBySessionId
+      description: Retrieves all tasks for a specific queue
+      operationId: getTasksByQueueId
       parameters:
       - in: path
-        name: sessionId
+        name: queueId
         required: true
         schema:
           type: string
@@ -3168,16 +3168,16 @@ paths:
                   $ref: '#/components/schemas/TaskResponse'
                 type: array
           description: OK
-      summary: Get tasks by session ID
+      summary: Get tasks by queue ID
       tags:
       - Task
-  /api/v1/tasks/session/{sessionId}/pending:
+  /api/v1/tasks/queue/{queueId}/pending:
     get:
-      description: Retrieves pending tasks for a specific session
-      operationId: getPendingTasksForSession
+      description: Retrieves pending tasks for a specific queue
+      operationId: getPendingTasksForQueue
       parameters:
       - in: path
-        name: sessionId
+        name: queueId
         required: true
         schema:
           type: string
@@ -3190,7 +3190,7 @@ paths:
                   $ref: '#/components/schemas/TaskResponse'
                 type: array
           description: OK
-      summary: Get pending tasks for session
+      summary: Get pending tasks for queue
       tags:
       - Task
   /api/v1/tasks/status/{status}:
@@ -4078,7 +4078,7 @@ paths:
       operationId: getWorkspaces
       parameters:
       - in: query
-        name: sessionId
+        name: queueId
         required: false
         schema:
           type: string
@@ -4124,12 +4124,12 @@ paths:
           description: OK
       tags:
       - workspace-monitoring-controller
-  /api/v1/workspaces/session/{sessionId}:
+  /api/v1/workspaces/queue/{queueId}:
     get:
-      operationId: getWorkspaceBySessionId
+      operationId: getWorkspaceByQueueId
       parameters:
       - in: path
-        name: sessionId
+        name: queueId
         required: true
         schema:
           type: string
@@ -4608,12 +4608,12 @@ servers:
 - description: Generated server url
   url: http://localhost:8080
 tags:
-- description: Session management API
-  name: Session
+- description: Queue management API
+  name: Queue
 - description: Integrated workspace and task management API
   name: Workspace-Task Integration
-- description: Session detail management API
-  name: Session Detail
+- description: Queue detail management API
+  name: Queue Detail
 - description: Custom workspace template management API
   name: Custom Templates
 - description: Document management API

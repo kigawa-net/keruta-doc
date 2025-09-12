@@ -1,8 +1,8 @@
-# keruta-executor
+# keruta-coder-provider
 
 ## 概要
 
-keruta-executorは、keruta-apiからペンディングタスクを検知してcoder環境を起動する環境管理サービスです。
+keruta-coder-providerは、keruta-apiからペンディングタスクを検知してcoder環境を起動する環境管理サービスです。
 Spring Bootベースのアプリケーションとして実装されており、タスクの実行は行わず、coder環境の起動のみを担当します。
 
 ## 機能
@@ -27,7 +27,7 @@ Spring Bootベースのアプリケーションとして実装されており、
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   keruta-api    │◄───│ keruta-executor │───▶│     coder       │
+│   keruta-api    │◄───│keruta-coder-provider│───▶│     coder       │
 │  (タスク管理)    │    │ (環境管理のみ)   │    │  (タスク実行)    │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
@@ -67,7 +67,7 @@ Spring Bootベースのアプリケーションとして実装されており、
 ```properties
 # keruta-api との連携設定
 keruta.api.base-url=http://localhost:8080
-keruta.executor.processing-delay=5000
+keruta.coder-provider.processing-delay=5000
 
 # coder環境設定
 coder.launch.timeout=60000
@@ -77,7 +77,7 @@ coder.launch.workspace-directory=/tmp/keruta-workspaces
 ### 主要設定項目
 
 - **keruta.api.base-url**: keruta-apiのベースURL
-- **keruta.executor.processing-delay**: タスク監視間隔（ミリ秒）
+- **keruta.coder-provider.processing-delay**: タスク監視間隔（ミリ秒）
 - **coder.launch.timeout**: coder環境起動タイムアウト
 - **coder.launch.workspace-directory**: ワークスペースディレクトリ
 
@@ -154,7 +154,7 @@ docker-compose up -d
 1. keruta-apiサーバーの起動
 2. coderの準備・設定
 3. application.propertiesの設定
-4. keruta-executorの起動
+4. keruta-coder-providerの起動
 
 ### デバッグ
 
@@ -164,7 +164,7 @@ docker-compose up -d
 
 ## 注意事項
 
-- keruta-executorはタスクの実行は行わない
+- keruta-coder-providerはタスクの実行は行わない
 - coder環境の起動と管理のみを担当
 - 実際のタスク実行はcoder側で行われる
 - ペンディングタスクの監視は継続的に実行される

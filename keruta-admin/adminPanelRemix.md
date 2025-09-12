@@ -38,7 +38,7 @@ Remixでは、ファイルベースのルーティングを採用しています
 
 - `/` - ダッシュボード
 - `/tasks` - タスク管理
-- `/sessions` - セッション管理
+- `/queues` - キュー管理
 - `/documents` - ドキュメント管理
 - `/repositories` - リポジトリ管理
 - `/kubernetes` - Kubernetes設定

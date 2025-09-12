@@ -356,22 +356,22 @@ class WebSocketHandler(
     private val taskLogService: TaskLogService
 ) {
     
-    private val sessions = ConcurrentHashMap<String, WebSocketSession>()
+    private val queues = ConcurrentHashMap<String, WebSocketQueue>()
     private val taskSubscriptions = ConcurrentHashMap<String, MutableSet<String>>()
     
-    fun handleMessage(session: WebSocketSession, message: String) {
+    fun handleMessage(queue: WebSocketQueue, message: String) {
         try {
             val logMessage = objectMapper.readValue(message, LogMessage::class.java)
             
             when (logMessage.type) {
                 "log" -> handleLogMessage(logMessage)
-                "subscribe" -> handleSubscribe(session, logMessage)
-                "unsubscribe" -> handleUnsubscribe(session, logMessage)
-                "ping" -> handlePing(session)
+                "subscribe" -> handleSubscribe(queue, logMessage)
+                "unsubscribe" -> handleUnsubscribe(queue, logMessage)
+                "ping" -> handlePing(queue)
             }
         } catch (e: Exception) {
             log.error("WebSocket message handling error", e)
-            sendError(session, "INVALID_MESSAGE_FORMAT", e.message)
+            sendError(queue, "INVALID_MESSAGE_FORMAT", e.message)
         }
     }
     
@@ -389,19 +389,19 @@ class WebSocketHandler(
         
         taskLogService.save(taskLog)
         
-        // タスクに関連するセッションに配信
+        // タスクに関連するキューに配信
         broadcastToTask(logMessage.taskId, logMessage)
     }
     
-    private fun handleSubscribe(session: WebSocketSession, message: LogMessage) {
+    private fun handleSubscribe(queue: WebSocketQueue, message: LogMessage) {
         val taskId = message.taskId
-        val sessionId = session.id
+        val queueId = queue.id
         
-        sessions[sessionId] = session
-        taskSubscriptions.computeIfAbsent(taskId) { mutableSetOf() }.add(sessionId)
+        queues[queueId] = queue
+        taskSubscriptions.computeIfAbsent(taskId) { mutableSetOf() }.add(queueId)
         
         // 接続確認メッセージを送信
-        sendMessage(session, mapOf(
+        sendMessage(queue, mapOf(
             "type" to "subscribed",
             "taskId" to taskId,
             "timestamp" to LocalDateTime.now().toString()
@@ -409,31 +409,31 @@ class WebSocketHandler(
     }
     
     fun broadcastToTask(taskId: String, message: Any) {
-        val sessionIds = taskSubscriptions[taskId] ?: return
+        val queueIds = taskSubscriptions[taskId] ?: return
         
-        sessionIds.forEach { sessionId ->
-            val session = sessions[sessionId]
-            if (session?.isOpen == true) {
+        queueIds.forEach { queueId ->
+            val queue = queues[queueId]
+            if (queue?.isOpen == true) {
                 try {
-                    sendMessage(session, message)
+                    sendMessage(queue, message)
                 } catch (e: Exception) {
                     log.error("WebSocket broadcast error", e)
-                    removeSession(sessionId)
+                    removeQueue(queueId)
                 }
             } else {
-                removeSession(sessionId)
+                removeQueue(queueId)
             }
         }
     }
     
-    private fun sendMessage(session: WebSocketSession, message: Any) {
+    private fun sendMessage(queue: WebSocketQueue, message: Any) {
         val json = objectMapper.writeValueAsString(message)
-        session.send(TextMessage(json))
+        queue.send(TextMessage(json))
     }
     
-    private fun removeSession(sessionId: String) {
-        sessions.remove(sessionId)
-        taskSubscriptions.values.forEach { it.remove(sessionId) }
+    private fun removeQueue(queueId: String) {
+        queues.remove(queueId)
+        taskSubscriptions.values.forEach { it.remove(queueId) }
     }
 }
 ```
