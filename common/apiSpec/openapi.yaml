@@ -4110,6 +4110,57 @@ paths:
           description: OK
       tags:
       - workspace-controller
+  /api/v1/workspaces/{id}/checkout:
+    post:
+      summary: Checkout specific branch in workspace
+      description: workspace開始時に指定されたブランチをチェックアウト
+      operationId: checkoutBranch
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        description: Workspace ID
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                branch:
+                  type: string
+                  description: Branch name to checkout
+                  example: "feature/new-feature"
+                repository:
+                  type: string
+                  description: Repository URL (optional if already cloned)
+                  example: "https://github.com/user/repo.git"
+              required:
+                - branch
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  currentBranch:
+                    type: string
+          description: Branch checkout successful
+        '400':
+          description: Invalid branch name or workspace not ready
+        '404':
+          description: Workspace not found or branch not found
+        '500':
+          description: Git operation failed
+      tags:
+      - workspace-controller
   /api/v1/workspaces/monitoring/status:
     get:
       operationId: getMonitoringStatus
@@ -4598,12 +4649,97 @@ paths:
           content:
             '*/*':
               schema:
-                additionalProperties:
-                  type: object
                 type: object
           description: OK
       tags:
-      - workspace-log-controller
+      - workspace-monitoring-controller
+  /ws/tasks:
+    get:
+      summary: WebSocket connection for real-time task distribution
+      description: |
+        WebSocketエンドポイント for keruta-executor to receive tasks in real-time.
+        
+        **Connection URL**: `ws://host:port/ws/tasks`
+        
+        **Message Format**:
+        - Incoming: Task assignment messages
+        - Outgoing: Task status updates
+        
+        **Authentication**: Bearer token required in Authorization header
+      operationId: connectTaskWebSocket
+      tags:
+        - websocket-controller
+      responses:
+        '101':
+          description: WebSocket connection established
+        '401':
+          description: Unauthorized - invalid token
+        '403':
+          description: Forbidden - insufficient permissions
+  /ws/agents/{agentId}/logs:
+    get:
+      summary: WebSocket connection for real-time log streaming
+      description: |
+        WebSocketエンドポイント for keruta-agent to stream logs in real-time.
+        
+        **Connection URL**: `ws://host:port/ws/agents/{agentId}/logs`
+        
+        **Message Format**:
+        - Outgoing: Real-time log entries
+        - Incoming: Log level configuration
+        
+        **Authentication**: Bearer token required in Authorization header
+      operationId: connectAgentLogWebSocket
+      parameters:
+        - in: path
+          name: agentId
+          required: true
+          schema:
+            type: string
+          description: Unique identifier for the agent
+      tags:
+        - websocket-controller
+      responses:
+        '101':
+          description: WebSocket connection established
+        '401':
+          description: Unauthorized - invalid token
+        '403':
+          description: Forbidden - insufficient permissions
+        '404':
+          description: Agent not found
+  /ws/workspaces/{workspaceId}/events:
+    get:
+      summary: WebSocket connection for workspace events
+      description: |
+        WebSocketエンドポイント for real-time workspace status and event updates.
+        
+        **Connection URL**: `ws://host:port/ws/workspaces/{workspaceId}/events`
+        
+        **Message Format**:
+        - Outgoing: Workspace status changes, build events, etc.
+        - Incoming: Workspace control commands
+        
+        **Authentication**: Bearer token required in Authorization header
+      operationId: connectWorkspaceEventWebSocket
+      parameters:
+        - in: path
+          name: workspaceId
+          required: true
+          schema:
+            type: string
+          description: Unique identifier for the workspace
+      tags:
+        - websocket-controller
+      responses:
+        '101':
+          description: WebSocket connection established
+        '401':
+          description: Unauthorized - invalid token
+        '403':
+          description: Forbidden - insufficient permissions
+        '404':
+          description: Workspace not found
 servers:
 - description: Generated server url
   url: http://localhost:8080
