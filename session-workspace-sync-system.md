@@ -69,12 +69,15 @@
 2. keruta-api → MongoDB: セッション情報保存 (PENDING状態)
 3. keruta-executor → keruta-api: PENDING状態セッション検索 (30秒間隔)
 4. keruta-executor → Coder API: ワークスペース作成
-5. keruta-executor → keruta-api: セッション状態をACTIVEに更新
+5. keruta-executor → keruta-api: 関連タスク状況に応じてセッション状態を更新
+   - 未完了タスクあり: ACTIVE状態に更新
+   - タスクなし/全完了: COMPLETED状態に更新
 
-ワークスペース監視フロー:
+ワークスペース・タスク監視フロー:
 1. keruta-executor → keruta-api: ACTIVE状態セッション検索 (60秒間隔)
 2. keruta-executor → Coder API: ワークスペース状態確認
-3. keruta-executor → Coder API: 必要に応じてワークスペース開始
+3. keruta-executor → keruta-api: 関連タスクの完了状況確認
+4. keruta-executor → keruta-api: タスク完了時にセッション状態をCOMPLETEDに更新
 ```
 
 ## 実装詳細
@@ -86,17 +89,25 @@
 ```
 PENDING → ACTIVE → COMPLETED/TERMINATED
    ↑         ↑           ↑
-   │         │           └─ 手動終了/自動終了
-   │         └─ ワークスペース作成完了時
+   │         │           └─ 手動終了/全タスク完了
+   │         └─ ワークスペース作成完了かつ未完了タスク存在時
    └─ セッション作成時の初期状態
 ```
 
 #### 状態管理ルール
 
 - **PENDING**: セッション作成直後、ワークスペース作成待ち
-- **ACTIVE**: ワークスペース作成完了、利用可能状態
-- **COMPLETED**: 正常終了
+- **ACTIVE**: ワークスペース作成完了かつ未完了タスクが存在する状態
+- **COMPLETED**: 関連する全タスクが完了した状態
 - **TERMINATED**: 異常終了またはキャンセル
+
+#### タスクベースの状態制御
+
+セッション状態は関連タスクの状況によって自動制御されます：
+
+- セッションにタスクが関連付けられている場合、未完了タスクがある間はACTIVE状態を維持
+- 関連するすべてのタスクが完了すると、セッション状態は自動的にCOMPLETEDに遷移
+- タスクが存在しない場合は、ワークスペース作成完了後即座にACTIVE状態になる
 
 **重要**: セッション状態の直接更新は403 Forbiddenで拒否され、システムによる自動管理のみ許可されています。
 
@@ -105,32 +116,40 @@ PENDING → ACTIVE → COMPLETED/TERMINATED
 #### 作成プロセス
 
 1. **セッション-ワークスペース関連付け**: セッションIDをワークスペース名に含める
-2. **テンプレート選択ロジック**:
-   - セッションタグとテンプレート名のマッチング
-   - "keruta"専用テンプレートの優先選択
-   - フォールバック: 最初の利用可能テンプレート
-3. **ワークスペース名生成**: `session-{sessionId(8桁)}-{sanitizedSessionName}`
+2. **テンプレート使用ロジック**:
+   - 環境変数`CODER_TEMPLATE_ID`で指定された単一テンプレートを固定使用
+   - リクエストでのテンプレート指定は無視
+   - すべてのワークスペースで同じテンプレートを使用
+3. **ワークスペース名生成**: `{CODER_WORKSPACE_PREFIX}-{sanitizedSessionName}`
 
 #### 実装コード例
 
 ```kotlin
-private fun selectBestTemplate(templates: List<CoderTemplateDto>, session: SessionDto): CoderTemplateDto? {
-    // タグマッチング
-    for (tag in session.tags) {
-        val matchingTemplate = templates.find { template ->
-            template.name.contains(tag, ignoreCase = true) ||
-            template.displayName.contains(tag, ignoreCase = true) ||
-            template.description.contains(tag, ignoreCase = true)
-        }
-        if (matchingTemplate != null) return matchingTemplate
+private fun getFixedTemplate(): String {
+    val templateId = System.getenv("CODER_TEMPLATE_ID")
+        ?: throw IllegalStateException("CODER_TEMPLATE_ID environment variable is not configured")
+    
+    // 起動時にテンプレートの存在を確認済み
+    return templateId
+}
+
+private fun generateWorkspaceName(sessionName: String): String {
+    val prefix = System.getenv("CODER_WORKSPACE_PREFIX")
+        ?: throw IllegalStateException("CODER_WORKSPACE_PREFIX environment variable is not configured")
+    
+    // セッション名をサニタイズ（英数字・ハイフンのみ許可）
+    val sanitizedName = sessionName.replace(Regex("[^a-zA-Z0-9\\-]"), "-")
+        .lowercase()
+        .trim('-')
+    
+    val workspaceName = "$prefix-$sanitizedName"
+    
+    // 名前の長さ制限（Coderの制限に合わせて63文字以下）
+    return if (workspaceName.length > 63) {
+        workspaceName.substring(0, 63).trimEnd('-')
+    } else {
+        workspaceName
     }
-    
-    // Keruta専用テンプレート
-    val kerutaTemplate = templates.find { it.name.contains("keruta", ignoreCase = true) }
-    if (kerutaTemplate != null) return kerutaTemplate
-    
-    // フォールバック
-    return templates.firstOrNull()
 }
 ```
 
@@ -155,13 +174,16 @@ private fun selectBestTemplate(templates: List<CoderTemplateDto>, session: Sessi
   2. ワークスペース状態確認
   3. 停止状態ワークスペースの自動開始
 
-### テンプレート選択ロジック
+### テンプレート使用制約
 
-#### 選択優先度
+#### 固定テンプレート使用
 
-1. **セッションタグマッチング**: セッションに設定されたタグとテンプレート情報の照合
-2. **Keruta専用テンプレート**: "keruta"を含むテンプレート名の優先選択
-3. **デフォルトテンプレート**: 最初の利用可能テンプレート
+**重要**: 単一テンプレートを固定使用
+
+1. **固定テンプレート**: `CODER_TEMPLATE_ID`で指定されたテンプレートのみ使用
+2. **リクエスト無視**: APIリクエストでのテンプレート指定は無視される
+3. **統一使用**: すべてのワークスペース作成で同じテンプレートを使用
+4. **動的選択禁止**: セッションタグや動的選択は無効
 
 ### エラーハンドリングと回路ブレーカーパターン
 
@@ -265,7 +287,7 @@ private fun calculateBackoffDelay(attempt: Int): Long {
   "workspaces": [
     {
       "id": "workspace-456",
-      "name": "session-12345678-my-project",
+      "name": "dev-my-project",
       "status": "running",
       "health": "healthy"
     }
@@ -439,6 +461,8 @@ keruta.executor.api-base-url=http://localhost:8080
 # Coder接続設定
 keruta.executor.coder.base-url=https://coder.example.com
 keruta.executor.coder.token=${KERUTA_EXECUTOR_CODER_TOKEN}
+keruta.executor.coder.template-id=${CODER_TEMPLATE_ID}
+keruta.executor.coder.workspace-prefix=${CODER_WORKSPACE_PREFIX}
 
 # 監視間隔調整 (application.yml)
 spring:

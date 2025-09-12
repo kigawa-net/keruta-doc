@@ -36,11 +36,11 @@ terraform {
   required_providers {
     coder = {
       source  = "coder/coder"
-      version = "~> 0.11.0"
+      version = "~> 0.21.0"
     }
     kubernetes = {
       source  = "hashicorp/kubernetes"
-      version = "~> 2.22"
+      version = "~> 2.30"
     }
   }
 }
@@ -53,8 +53,7 @@ data "coder_provisioner" "me" {
 }
 
 provider "kubernetes" {
-  # Kubernetes接続設定をここに追加
-  config_path = "/path/to/kubeconfig"
+  # クラスター内での実行を想定
 }
 
 data "coder_workspace" "me" {
@@ -66,42 +65,13 @@ resource "coder_agent" "main" {
   startup_script_timeout = 180
   startup_script = <<-EOT
     set -e
-
-    # システムアップデート
+    # 基本ツールのインストール
     sudo apt-get update
-    sudo apt-get upgrade -y
-
-    # 開発ツールのインストール
-    sudo apt-get install -y \\
-      curl \\
-      wget \\
-      git \\
-      vim \\
-      nano \\
-      htop \\
-      tree \\
-      jq \\
-      unzip \\
-      build-essential \\
-      python3 \\
-      python3-pip \\
-      nodejs \\
-      npm
-
-    # Dockerのインストール
-    curl -fsSL https://get.docker.com -o get-docker.sh
-    sudo sh get-docker.sh
-    sudo usermod -aG docker $USER
-
-    # Docker Composeのインストール
-    sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-\$(uname -s)-\$(uname -m)" -o /usr/local/bin/docker-compose
-    sudo chmod +x /usr/local/bin/docker-compose
-
-    # Keruta用の追加設定
+    sudo apt-get install -y curl git vim build-essential
+    
+    # ワークスペースディレクトリの作成
     mkdir -p /home/coder/workspace
     chown coder:coder /home/coder/workspace
-
-    echo "Keruta Ubuntu環境のセットアップが完了しました"
   EOT
 
   # メタデータ
@@ -182,15 +152,20 @@ resource "kubernetes_deployment" "main" {
       }
       spec {
         security_context {
-          run_as_user = "1000"
-          fs_group    = "1000"
+          run_as_user    = 1000
+          run_as_group   = 1000
+          fs_group       = 1000
+          run_as_non_root = true
         }
         container {
           name  = "main"
           image = "ubuntu:22.04"
           command = ["sh", "-c", coder_agent.main.init_script]
           security_context {
-            run_as_user = "1000"
+            run_as_user                = 1000
+            run_as_non_root            = true
+            allow_privilege_escalation = false
+            read_only_root_filesystem  = false
           }
           env {
             name  = "CODER_AGENT_TOKEN"
@@ -294,34 +269,39 @@ variable "workspaces_namespace" {
 ### 環境変数設定
 
 ```bash
-# 優先テンプレートキーワードを設定
-export CODER_PREFERRED_TEMPLATE_KEYWORDS="keruta-ubuntu,ubuntu,linux"
+# 使用するテンプレートID（必須）
+export CODER_TEMPLATE_ID="keruta-ubuntu-22.04"
 
-# または既存のテンプレートIDを直接指定
-export CODER_DEFAULT_TEMPLATE_ID="your-custom-template-id"
+# ワークスペース名のprefix（必須）
+export CODER_WORKSPACE_PREFIX="dev"
 ```
 
 ### application.propertiesの設定
 
 ```properties
-# 優先テンプレートキーワード（カンマ区切り）
-coder.preferred-template-keywords=keruta-ubuntu,ubuntu,linux
+# 使用するテンプレートID
+coder.template-id=${CODER_TEMPLATE_ID:}
 
-# 直接テンプレートIDを指定する場合
-coder.default-template-id=your-custom-template-id
+# ワークスペース名prefix
+coder.workspace-prefix=${CODER_WORKSPACE_PREFIX:}
+
+# テンプレート検証設定
+coder.template-validation.strict=true
 ```
 
-## テンプレート選択の優先順位
+## テンプレート利用制約
 
-Kerutaは以下の順序でテンプレートを選択します：
+**重要**: Kerutaは単一のテンプレートのみ使用します：
 
-1. **リクエストで指定されたテンプレートID**
-2. **設定されたデフォルトテンプレートID**
-3. **優先キーワードによる検索**
-   - 完全名称一致 (`keruta-ubuntu`)
-   - 名称部分一致 (名前に `ubuntu` を含む)
-   - 説明部分一致 (説明に `ubuntu` を含む)
-4. **最初に見つかったテンプレート（フォールバック）**
+1. **単一テンプレート**: `CODER_TEMPLATE_ID`で指定されたテンプレートのみ使用
+2. **固定使用**: すべてのワークスペース作成で同じテンプレートを使用
+3. **リクエスト無視**: APIリクエストでテンプレートIDを指定しても無視される
+
+### テンプレート使用ルール
+
+1. **固定テンプレート**: 環境変数`CODER_TEMPLATE_ID`で指定されたテンプレートを常に使用
+2. **設定必須**: 環境変数が未設定の場合はシステム起動エラー
+3. **存在確認**: 起動時にCoderシステムでテンプレートの存在を確認
 
 ## テンプレートの確認
 
@@ -370,6 +350,7 @@ resources {
 
 ## 関連ドキュメント
 
+- [Coderテンプレート利用制約仕様](./system/coderTemplateSpec.md)
 - [Coder Template Documentation](https://coder.com/docs/coder-oss/templates)
 - [Kubernetes Provider for Terraform](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs)
-- [Keruta Workspace API](../workspace-api.md)
+- [Session-Workspace同期APIシステム](../../session-workspace-sync-system.md)
