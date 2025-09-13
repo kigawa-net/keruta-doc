@@ -19,6 +19,7 @@ jobs:
           repository: kigawa-net/keruta-api
           token: ${{ secrets.GIT_TOKEN }}
           path: keruta-api
+          ref: develop
           fetch-depth: 0
       
       - name: Set up JDK 21
@@ -33,15 +34,19 @@ jobs:
           build-root-directory: keruta-api
       
       - name: Generate OpenAPI documentation
+        timeout-minutes: 10
         run: |
           cd keruta-api
-          ./gradlew openApiGenerate
+          ./gradlew openApiGenerate --no-daemon --parallel
+          # Move generated files to a non-gitignored location
+          mkdir -p generated-api
+          cp -r build/generated/* generated-api/ 2>/dev/null || true
       
       - name: Check for changes in keruta-api
         id: api-changes
         run: |
           cd keruta-api
-          git add -N build/generated/ || true
+          git add -N generated-api/ || true
           if git diff --quiet --exit-code; then
             echo "changed=false" >> $GITHUB_OUTPUT
           else
@@ -54,7 +59,7 @@ jobs:
           cd keruta-api
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
-          git add build/generated/
+          git add generated-api/
           git commit -m "Update OpenAPI generated files from keruta-doc
           
           Triggered by keruta-doc push: ${{ github.repository }}@${{ github.sha }}
@@ -73,6 +78,7 @@ jobs:
           repository: kigawa-net/keruta-api
           token: ${{ secrets.GIT_TOKEN }}
           path: keruta-api
+          ref: develop
           fetch-depth: 0
       
       - name: Checkout keruta-admin repository
@@ -81,6 +87,7 @@ jobs:
           repository: kigawa-net/keruta-admin
           token: ${{ secrets.GIT_TOKEN }}
           path: keruta-admin
+          ref: develop
           fetch-depth: 0
       
       - name: Set up JDK 21
@@ -102,14 +109,15 @@ jobs:
           build-root-directory: keruta-api
       
       - name: Start keruta-api server
+        timeout-minutes: 5
         run: |
           cd keruta-api
-          ./gradlew :api:bootRun --args='--spring.profiles.active=test' &
+          ./gradlew :api:bootRun --args='--spring.profiles.active=test' --no-daemon &
           API_PID=$!
           echo "API_PID=$API_PID" >> $GITHUB_ENV
           
           # Wait for API to be ready
-          timeout 60 bash -c 'until curl -sf http://localhost:8080/actuator/health; do sleep 2; done'
+          timeout 120 bash -c 'until curl -sf http://localhost:8080/actuator/health; do sleep 3; done'
       
       - name: Install npm dependencies
         run: |
@@ -160,6 +168,7 @@ jobs:
           repository: kigawa-net/keruta-api
           token: ${{ secrets.GIT_TOKEN }}
           path: keruta-api
+          ref: develop
           fetch-depth: 0
       
       - name: Checkout keruta-agent repository
@@ -168,6 +177,7 @@ jobs:
           repository: kigawa-net/keruta-agent
           token: ${{ secrets.GIT_TOKEN }}
           path: keruta-agent
+          ref: develop
           fetch-depth: 0
       
       - name: Set up JDK 21
@@ -189,14 +199,15 @@ jobs:
           build-root-directory: keruta-api
       
       - name: Start keruta-api server
+        timeout-minutes: 5
         run: |
           cd keruta-api
-          ./gradlew :api:bootRun --args='--spring.profiles.active=test' &
+          ./gradlew :api:bootRun --args='--spring.profiles.active=test' --no-daemon &
           API_PID=$!
           echo "API_PID=$API_PID" >> $GITHUB_ENV
           
           # Wait for API to be ready
-          timeout 60 bash -c 'until curl -sf http://localhost:8080/actuator/health; do sleep 2; done'
+          timeout 120 bash -c 'until curl -sf http://localhost:8080/actuator/health; do sleep 3; done'
       
       - name: Generate Go client
         run: |
@@ -242,6 +253,7 @@ jobs:
           repository: kigawa-net/keruta-api
           token: ${{ secrets.GIT_TOKEN }}
           path: keruta-api
+          ref: develop
           fetch-depth: 0
       
       - name: Checkout keruta-coder-provider repository
@@ -250,6 +262,7 @@ jobs:
           repository: kigawa-net/keruta-coder-provider
           token: ${{ secrets.GIT_TOKEN }}
           path: keruta-coder-provider
+          ref: develop
           fetch-depth: 0
       
       - name: Set up JDK 21
@@ -269,20 +282,25 @@ jobs:
           build-root-directory: keruta-coder-provider
       
       - name: Start keruta-api server
+        timeout-minutes: 5
         run: |
           cd keruta-api
-          ./gradlew :api:bootRun --args='--spring.profiles.active=test' &
+          ./gradlew :api:bootRun --args='--spring.profiles.active=test' --no-daemon &
           API_PID=$!
           echo "API_PID=$API_PID" >> $GITHUB_ENV
           
           # Wait for API to be ready
-          timeout 60 bash -c 'until curl -sf http://localhost:8080/actuator/health; do sleep 2; done'
+          timeout 120 bash -c 'until curl -sf http://localhost:8080/actuator/health; do sleep 3; done'
       
       - name: Generate Kotlin client
+        timeout-minutes: 10
         run: |
           cd keruta-coder-provider
           # Override inputSpec to use running API server
-          ./gradlew openApiGenerate -PinputSpec=http://localhost:8080/v3/api-docs
+          ./gradlew openApiGenerate -PinputSpec=http://localhost:8080/v3/api-docs --no-daemon --parallel
+          # Move generated files to a non-gitignored location
+          mkdir -p generated-client
+          cp -r build/generated-sources/* generated-client/ 2>/dev/null || true
       
       - name: Stop API server
         run: kill $API_PID || true
@@ -291,7 +309,7 @@ jobs:
         id: coder-provider-changes
         run: |
           cd keruta-coder-provider
-          git add -N build/generated-sources/ || true
+          git add -N generated-client/ || true
           if git diff --quiet --exit-code; then
             echo "changed=false" >> $GITHUB_OUTPUT
           else
@@ -304,7 +322,7 @@ jobs:
           cd keruta-coder-provider
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
-          git add build/generated-sources/
+          git add generated-client/
           git commit -m "Update Kotlin API client from keruta-doc
           
           Triggered by keruta-doc push: ${{ github.repository }}@${{ github.sha }}

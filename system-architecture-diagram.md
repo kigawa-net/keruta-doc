@@ -141,14 +141,13 @@ graph TB
 - **Ingress Controller**: 外部トラフィック制御
 - **keruta-api Service**: メインAPIサーバー（Spring Boot/Kotlin）
 - **keruta-admin Service**: Web UIホスティング（React Router SSR）
-- **keruta-coder-provider**: Worker Pod管理・オーケストレーション
+- **keruta-coder-provider**: Coderワークスペース管理・監視
 - **Worker Pods**: Coder + keruta-agentによるタスクキュー処理
 - **Task Job Pods**: Coder環境での実際のタスク実行
 
 ### データ層
 - **MongoDB**: メインデータストア（タスク、ユーザー、ドキュメント）
 - **Persistent Volume**: 共有ストレージ
-- **Log Collection**: ログ集約システム
 
 ## データフロー
 
@@ -161,18 +160,19 @@ graph TB
 ### タスク実行フロー
 1. ユーザーがWeb UIでタスク作成
 2. APIがタスクをMongoDBに保存
-3. keruta-coder-providerがタスクキューを監視・管理
-4. keruta-coder-providerがWorker Podにタスクを割り当て
-5. Worker Pod（Coder + keruta-agent）がタスク処理
-6. Coder環境でJob Podを作成してタスク実行
-7. keruta-agentが実行結果を収集
-8. 結果をAPIサーバー経由でMongoDBに保存
+3. keruta-coder-providerがAPIからWebSocketでタスクを受信
+4. keruta-coder-providerが、coderにworkspaceがない場合はworkspaceを作成
+5. Coderのworkspaceでタスク処理
+6. keruta-agentがAPIとWebSocketで接続してタスクを受信・実行
+7. keruta-agentがログをリアルタイムストリーミング
+8. 実行結果をAPIサーバー経由でMongoDBに保存
 
 ### Git連携フロー
-1. Job Pod作成時にGitリポジトリをclone
-2. タスク実行環境セットアップ
-3. 共有ストレージに結果保存
-4. ログ収集・監視
+1. workspace作成時にGitリポジトリをclone
+2. workspace開始時にブランチのチェックアウト
+3. タスク実行環境セットアップ
+4. 共有ストレージに結果保存
+5. ログ収集・監視
 
 ## 特徴
 
