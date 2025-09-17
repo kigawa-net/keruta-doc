@@ -130,9 +130,13 @@ components:
           type: array
         templateConfig:
           $ref: '#/components/schemas/QueueTemplateConfigRequest'
+        providerId:
+          type: string
+          description: キューに関連付けるタスク実行プロバイダーのID
       required:
       - name
       - tags
+      - providerId
       type: object
     CreateTaskRequest:
       properties:
@@ -359,6 +363,11 @@ components:
         updatedAt:
           format: date-time
           type: string
+        providerId:
+          type: string
+          description: キューに関連付けられたタスク実行プロバイダーのID
+        provider:
+          $ref: '#/components/schemas/TaskExecutionProvider'
       required:
       - createdAt
       - id
@@ -366,6 +375,8 @@ components:
       - status
       - tags
       - updatedAt
+      - providerId
+      - provider
       type: object
     QueueResponse:
       properties:
@@ -387,6 +398,16 @@ components:
         updatedAt:
           format: date-time
           type: string
+        providerId:
+          type: string
+          description: キューに関連付けられたタスク実行プロバイダーのID
+        providerName:
+          type: string
+          description: プロバイダー名（表示用）
+        providerType:
+          type: string
+          enum: [kubernetes, docker, local, ssh, cloud]
+          description: プロバイダーの種類
       required:
       - createdAt
       - id
@@ -394,6 +415,9 @@ components:
       - status
       - tags
       - updatedAt
+      - providerId
+      - providerName
+      - providerType
       type: object
     TaskResponse:
       properties:
@@ -489,6 +513,417 @@ components:
       - tags
       - updatedAt
       type: object
+    # Task Execution Provider Schemas
+    TaskExecutionProvider:
+      properties:
+        id:
+          type: string
+          description: プロバイダーの一意識別子
+        name:
+          type: string
+          description: プロバイダー名
+        type:
+          type: string
+          enum: [kubernetes, docker, local, ssh, cloud]
+          description: 実行プロバイダーの種類
+        description:
+          type: string
+          description: プロバイダーの説明
+        isActive:
+          type: boolean
+          description: プロバイダーがアクティブかどうか
+        configuration:
+          type: object
+          additionalProperties:
+            type: string
+          description: プロバイダー固有の設定
+        capabilities:
+          type: array
+          items:
+            type: string
+          description: プロバイダーがサポートする機能のリスト
+        priority:
+          type: integer
+          format: int32
+          description: プロバイダーの優先度（数値が高いほど優先）
+        maxConcurrentTasks:
+          type: integer
+          format: int32
+          description: 同時実行可能なタスク数の上限
+        currentTaskCount:
+          type: integer
+          format: int32
+          description: 現在実行中のタスク数
+        tags:
+          type: array
+          items:
+            type: string
+          description: プロバイダーのタグ
+        supportedArchitectures:
+          type: array
+          items:
+            type: string
+          description: サポートするアーキテクチャ（amd64, arm64など）
+        resourceRequirements:
+          $ref: '#/components/schemas/ResourceRequirements'
+        healthStatus:
+          type: string
+          enum: [healthy, unhealthy, unknown]
+          description: プロバイダーのヘルスステータス
+        lastHealthCheck:
+          type: string
+          format: date-time
+          description: 最後のヘルスチェック実行時刻
+        errorMessage:
+          type: string
+          description: エラーメッセージ（エラー時のみ）
+        createdAt:
+          type: string
+          format: date-time
+          description: 作成日時
+        updatedAt:
+          type: string
+          format: date-time
+          description: 更新日時
+      required:
+        - id
+        - name
+        - type
+        - isActive
+        - configuration
+        - capabilities
+        - priority
+        - maxConcurrentTasks
+        - currentTaskCount
+        - tags
+        - supportedArchitectures
+        - healthStatus
+        - createdAt
+        - updatedAt
+      type: object
+    CreateTaskExecutionProviderRequest:
+      properties:
+        name:
+          type: string
+          description: プロバイダー名
+        type:
+          type: string
+          enum: [kubernetes, docker, local, ssh, cloud]
+          description: 実行プロバイダーの種類
+        description:
+          type: string
+          description: プロバイダーの説明
+        configuration:
+          type: object
+          additionalProperties:
+            type: string
+          description: プロバイダー固有の設定
+        capabilities:
+          type: array
+          items:
+            type: string
+          description: プロバイダーがサポートする機能のリスト
+        priority:
+          type: integer
+          format: int32
+          description: プロバイダーの優先度（数値が高いほど優先）
+        maxConcurrentTasks:
+          type: integer
+          format: int32
+          description: 同時実行可能なタスク数の上限
+        tags:
+          type: array
+          items:
+            type: string
+          description: プロバイダーのタグ
+        supportedArchitectures:
+          type: array
+          items:
+            type: string
+          description: サポートするアーキテクチャ（amd64, arm64など）
+        resourceRequirements:
+          $ref: '#/components/schemas/ResourceRequirements'
+      required:
+        - name
+        - type
+        - configuration
+        - capabilities
+        - priority
+        - maxConcurrentTasks
+        - tags
+        - supportedArchitectures
+      type: object
+    UpdateTaskExecutionProviderRequest:
+      properties:
+        name:
+          type: string
+          description: プロバイダー名
+        description:
+          type: string
+          description: プロバイダーの説明
+        configuration:
+          type: object
+          additionalProperties:
+            type: string
+          description: プロバイダー固有の設定
+        capabilities:
+          type: array
+          items:
+            type: string
+          description: プロバイダーがサポートする機能のリスト
+        priority:
+          type: integer
+          format: int32
+          description: プロバイダーの優先度（数値が高いほど優先）
+        maxConcurrentTasks:
+          type: integer
+          format: int32
+          description: 同時実行可能なタスク数の上限
+        tags:
+          type: array
+          items:
+            type: string
+          description: プロバイダーのタグ
+        supportedArchitectures:
+          type: array
+          items:
+            type: string
+          description: サポートするアーキテクチャ（amd64, arm64など）
+        resourceRequirements:
+          $ref: '#/components/schemas/ResourceRequirements'
+        isActive:
+          type: boolean
+          description: プロバイダーがアクティブかどうか
+      type: object
+    ResourceRequirements:
+      properties:
+        cpu:
+          type: string
+          description: CPU要求量（例："100m", "1"）
+        memory:
+          type: string
+          description: メモリ要求量（例："256Mi", "1Gi"）
+        storage:
+          type: string
+          description: ストレージ要求量（例："10Gi"）
+        gpu:
+          type: string
+          description: GPU要求量（例："1"）
+      type: object
+    TaskExecutionRequest:
+      properties:
+        taskId:
+          type: string
+          description: 実行するタスクのID
+        providerId:
+          type: string
+          description: 使用するプロバイダーのID（指定しない場合は自動選択）
+        overrideConfiguration:
+          type: object
+          additionalProperties:
+            type: string
+          description: プロバイダー設定のオーバーライド
+        timeout:
+          type: integer
+          format: int32
+          description: タイムアウト時間（秒）
+      required:
+        - taskId
+      type: object
+    TaskExecutionResult:
+      properties:
+        taskId:
+          type: string
+          description: 実行したタスクのID
+        providerId:
+          type: string
+          description: 使用したプロバイダーのID
+        executionId:
+          type: string
+          description: 実行の一意識別子
+        status:
+          type: string
+          enum: [pending, running, completed, failed, cancelled]
+          description: 実行ステータス
+        startedAt:
+          type: string
+          format: date-time
+          description: 実行開始時刻
+        completedAt:
+          type: string
+          format: date-time
+          description: 実行完了時刻
+        exitCode:
+          type: integer
+          format: int32
+          description: 終了コード
+        stdout:
+          type: string
+          description: 標準出力
+        stderr:
+          type: string
+          description: 標準エラー出力
+        artifacts:
+          type: array
+          items:
+            type: string
+          description: 実行により生成されたアーティファクト
+        resourceUsage:
+          $ref: '#/components/schemas/ResourceUsage'
+        errorMessage:
+          type: string
+          description: エラーメッセージ（エラー時のみ）
+      required:
+        - taskId
+        - providerId
+        - executionId
+        - status
+      type: object
+    ResourceUsage:
+      properties:
+        peakCpuUsage:
+          type: string
+          description: ピーク時のCPU使用量
+        peakMemoryUsage:
+          type: string
+          description: ピーク時のメモリ使用量
+        executionTime:
+          type: integer
+          format: int64
+          description: 実行時間（ミリ秒）
+        networkIn:
+          type: integer
+          format: int64
+          description: ネットワーク受信量（バイト）
+        networkOut:
+          type: integer
+          format: int64
+          description: ネットワーク送信量（バイト）
+      type: object
+    # WebSocket Message Schemas
+    TaskStatusUpdateMessage:
+      properties:
+        type:
+          type: string
+          enum: [task_status_update, task_progress_update, task_log_update]
+          description: メッセージタイプ
+        taskId:
+          type: string
+          description: タスクID
+        timestamp:
+          type: string
+          format: date-time
+          description: メッセージタイムスタンプ
+        data:
+          $ref: '#/components/schemas/TaskStatusUpdateData'
+      required:
+        - type
+        - taskId
+        - timestamp
+        - data
+      type: object
+    TaskStatusUpdateData:
+      properties:
+        status:
+          type: string
+          enum: [pending, running, completed, failed, cancelled]
+          description: 新しいタスクステータス
+        progress:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 100
+          description: タスクの進捗率（0-100%）
+        message:
+          type: string
+          description: ステータス変更に関するメッセージ
+        startedAt:
+          type: string
+          format: date-time
+          description: タスク開始時刻（statusがrunningの場合）
+        completedAt:
+          type: string
+          format: date-time
+          description: タスク完了時刻（statusがcompleted/failed/cancelledの場合）
+        errorCode:
+          type: string
+          description: エラーコード（statusがfailedの場合）
+        errorMessage:
+          type: string
+          description: エラーメッセージ（statusがfailedの場合）
+        logs:
+          type: array
+          items:
+            type: string
+          description: 新しいログエントリ（typeがtask_log_updateの場合）
+        artifacts:
+          type: array
+          items:
+            type: string
+          description: 生成されたアーティファクト（statusがcompletedの場合）
+        resourceUsage:
+          $ref: '#/components/schemas/ResourceUsage'
+      type: object
+    WebSocketSubscriptionRequest:
+      properties:
+        action:
+          type: string
+          enum: [subscribe, unsubscribe]
+          description: アクション（購読/購読解除）
+        channels:
+          type: array
+          items:
+            type: string
+          description: 購読するチャンネル（task:{taskId}, queue:{queueId}, provider:{providerId}, all）
+        filters:
+          type: object
+          properties:
+            taskIds:
+              type: array
+              items:
+                type: string
+              description: 特定のタスクIDのみ購読
+            queueIds:
+              type: array
+              items:
+                type: string
+              description: 特定のキューIDのタスクのみ購読
+            providerIds:
+              type: array
+              items:
+                type: string
+              description: 特定のプロバイダーIDのタスクのみ購読
+            statuses:
+              type: array
+              items:
+                type: string
+                enum: [pending, running, completed, failed, cancelled]
+              description: 特定のステータスのタスクのみ購読
+          description: 購読フィルター
+      required:
+        - action
+        - channels
+      type: object
+    WebSocketResponse:
+      properties:
+        type:
+          type: string
+          enum: [subscription_success, subscription_error, task_status_update, task_progress_update, task_log_update, heartbeat]
+          description: レスポンスタイプ
+        message:
+          type: string
+          description: レスポンスメッセージ
+        data:
+          type: object
+          description: レスポンスデータ
+        timestamp:
+          type: string
+          format: date-time
+          description: レスポンスタイムスタンプ
+      required:
+        - type
+        - timestamp
+      type: object
     UpdateAgentRequest:
       properties:
         description:
@@ -540,6 +975,9 @@ components:
           items:
             type: string
           type: array
+        providerId:
+          type: string
+          description: キューに関連付けるタスク実行プロバイダーのID
       required:
       - name
       - tags
@@ -1705,13 +2143,13 @@ paths:
       summary: WebSocket connection for real-time log streaming
       description: |
         WebSocketエンドポイント for keruta-agent to stream logs in real-time.
-        
+
         **Connection URL**: `ws://host:port/ws/agents/{agentId}/logs`
-        
+
         **Message Format**:
         - Outgoing: Real-time log entries
         - Incoming: Log level configuration
-        
+
         **Authentication**: Bearer token required in Authorization header
       operationId: connectAgentLogWebSocket
       parameters:
@@ -1732,6 +2170,380 @@ paths:
           description: Forbidden - insufficient permissions
         '404':
           description: Agent not found
+  # Task Execution Provider Endpoints
+  /api/v1/providers:
+    get:
+      summary: プロバイダー一覧取得
+      description: 全てのタスク実行プロバイダーの一覧を取得します
+      operationId: getAllProviders
+      parameters:
+        - in: query
+          name: type
+          required: false
+          schema:
+            type: string
+            enum: [kubernetes, docker, local, ssh, cloud]
+          description: プロバイダーの種類でフィルタリング
+        - in: query
+          name: isActive
+          required: false
+          schema:
+            type: boolean
+          description: アクティブなプロバイダーのみ取得
+        - in: query
+          name: capability
+          required: false
+          schema:
+            type: string
+          description: 特定の機能を持つプロバイダーのみ取得
+        - in: query
+          name: tag
+          required: false
+          schema:
+            type: string
+          description: 特定のタグを持つプロバイダーのみ取得
+      responses:
+        '200':
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaskExecutionProvider'
+          description: OK
+      tags:
+        - Task Execution Provider
+    post:
+      summary: プロバイダー作成
+      description: 新しいタスク実行プロバイダーを作成します
+      operationId: createProvider
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTaskExecutionProviderRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/TaskExecutionProvider'
+          description: OK
+      tags:
+        - Task Execution Provider
+  /api/v1/providers/{id}:
+    get:
+      summary: プロバイダー詳細取得
+      description: 指定されたIDのプロバイダー詳細を取得します
+      operationId: getProviderById
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: プロバイダーID
+      responses:
+        '200':
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/TaskExecutionProvider'
+          description: OK
+      tags:
+        - Task Execution Provider
+    put:
+      summary: プロバイダー更新
+      description: 既存のタスク実行プロバイダーを更新します
+      operationId: updateProvider
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: プロバイダーID
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTaskExecutionProviderRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/TaskExecutionProvider'
+          description: OK
+      tags:
+        - Task Execution Provider
+    delete:
+      summary: プロバイダー削除
+      description: 指定されたIDのプロバイダーを削除します
+      operationId: deleteProvider
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: プロバイダーID
+      responses:
+        '200':
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
+          description: OK
+      tags:
+        - Task Execution Provider
+  /api/v1/providers/{id}/health:
+    get:
+      summary: プロバイダーヘルスチェック
+      description: プロバイダーのヘルス状態を確認します
+      operationId: checkProviderHealth
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: プロバイダーID
+      responses:
+        '200':
+          content:
+            '*/*':
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [healthy, unhealthy, unknown]
+                  message:
+                    type: string
+                  timestamp:
+                    type: string
+                    format: date-time
+          description: OK
+      tags:
+        - Task Execution Provider
+    post:
+      summary: プロバイダーヘルスチェック実行
+      description: プロバイダーのヘルスチェックを手動で実行します
+      operationId: performProviderHealthCheck
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: プロバイダーID
+      responses:
+        '200':
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/TaskExecutionProvider'
+          description: OK
+      tags:
+        - Task Execution Provider
+  /api/v1/providers/{id}/toggle-status:
+    post:
+      summary: プロバイダー状態切り替え
+      description: プロバイダーのアクティブ/非アクティブ状態を切り替えます
+      operationId: toggleProviderStatus
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: プロバイダーID
+      responses:
+        '200':
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/TaskExecutionProvider'
+          description: OK
+      tags:
+        - Task Execution Provider
+  /api/v1/providers/select:
+    post:
+      summary: 最適プロバイダー選択
+      description: タスクの要件に基づいて最適なプロバイダーを選択します
+      operationId: selectOptimalProvider
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                requiredCapabilities:
+                  type: array
+                  items:
+                    type: string
+                  description: 必要な機能のリスト
+                requiredArchitecture:
+                  type: string
+                  description: 必要なアーキテクチャ
+                resourceRequirements:
+                  $ref: '#/components/schemas/ResourceRequirements'
+                tags:
+                  type: array
+                  items:
+                    type: string
+                  description: 必要なタグのリスト
+              required:
+                - requiredCapabilities
+        required: true
+      responses:
+        '200':
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/TaskExecutionProvider'
+          description: OK
+        '404':
+          content:
+            '*/*':
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+          description: 条件に合うプロバイダーが見つかりません
+      tags:
+        - Task Execution Provider
+  /api/v1/providers/{id}/queues:
+    get:
+      summary: プロバイダーに関連付けられたキュー一覧
+      description: 指定したプロバイダーに関連付けられたキューの一覧を取得します
+      operationId: getQueuesByProvider
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: プロバイダーID
+        - in: query
+          name: status
+          required: false
+          schema:
+            type: string
+          description: キューのステータスでフィルタリング
+      responses:
+        '200':
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/QueueResponse'
+          description: OK
+      tags:
+        - Task Execution Provider
+  /api/v1/execution:
+    post:
+      summary: タスク実行開始
+      description: 指定したプロバイダーでタスクの実行を開始します
+      operationId: executeTask
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskExecutionRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/TaskExecutionResult'
+          description: OK
+      tags:
+        - Task Execution Provider
+  /api/v1/execution/{executionId}:
+    get:
+      summary: 実行結果取得
+      description: 指定された実行IDの結果を取得します
+      operationId: getExecutionResult
+      parameters:
+        - in: path
+          name: executionId
+          required: true
+          schema:
+            type: string
+          description: 実行ID
+      responses:
+        '200':
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/TaskExecutionResult'
+          description: OK
+      tags:
+        - Task Execution Provider
+    delete:
+      summary: タスク実行キャンセル
+      description: 実行中のタスクをキャンセルします
+      operationId: cancelExecution
+      parameters:
+        - in: path
+          name: executionId
+          required: true
+          schema:
+            type: string
+          description: 実行ID
+      responses:
+        '200':
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/TaskExecutionResult'
+          description: OK
+      tags:
+        - Task Execution Provider
+  /api/v1/execution/{executionId}/logs:
+    get:
+      summary: 実行ログ取得
+      description: 指定された実行IDのログを取得します
+      operationId: getExecutionLogs
+      parameters:
+        - in: path
+          name: executionId
+          required: true
+          schema:
+            type: string
+          description: 実行ID
+        - in: query
+          name: follow
+          required: false
+          schema:
+            type: boolean
+            default: false
+          description: リアルタイムでログを取得するかどうか
+        - in: query
+          name: tail
+          required: false
+          schema:
+            type: integer
+            format: int32
+          description: 最後のN行のログを取得
+      responses:
+        '200':
+          content:
+            text/plain:
+              schema:
+                type: string
+          description: OK
+      tags:
+        - Task Execution Provider
 servers:
 - description: Generated server url
   url: http://localhost:8080
@@ -1750,3 +2562,5 @@ tags:
   name: Authentication
 - description: Task management API
   name: Task
+- description: タスク実行プロバイダー管理API
+  name: Task Execution Provider
