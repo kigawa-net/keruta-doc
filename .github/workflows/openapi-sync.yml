@@ -36,11 +36,13 @@ jobs:
       - name: Generate OpenAPI documentation
         timeout-minutes: 10
         run: |
+          set -ue
           cd keruta-api
           ./gradlew openApiGenerate --no-daemon --parallel
           # Move generated files to a non-gitignored location
           mkdir -p generated-api
           cp -r build/generated/* generated-api/
+          ls generated-api/
 
       - name: Check for changes in keruta-api
         id: api-changes
