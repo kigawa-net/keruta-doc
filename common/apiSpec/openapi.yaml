@@ -2089,7 +2089,8 @@ paths:
       - Task
   /api/v1/tasks/{id}/status:
     put:
-      description: Updates the status of a specific task
+      description: "Updates the status of a specific task. **DEPRECATED**: Use WebSocket /ws/tasks/status for real-time status updates instead."
+      deprecated: true
       operationId: updateTaskStatus
       parameters:
       - in: path
@@ -2170,6 +2171,66 @@ paths:
           description: Forbidden - insufficient permissions
         '404':
           description: Agent not found
+  /ws/tasks/status:
+    get:
+      summary: WebSocket connection for real-time task status updates
+      description: |
+        WebSocketエンドポイント for real-time task status updates.
+
+        **Connection URL**: `ws://host:port/ws/tasks/status`
+
+        **Message Format**:
+        - Incoming: Subscription requests for task updates
+        - Outgoing: Real-time task status, progress, and log updates
+
+        **Subscription Channels**:
+        - `task:{taskId}` - 特定のタスクの更新
+        - `queue:{queueId}` - 特定のキューのタスク更新
+        - `provider:{providerId}` - 特定のプロバイダーのタスク更新
+        - `all` - 全てのタスク更新
+
+        **Message Types**:
+        - `task_status_update` - タスクステータス変更
+        - `task_progress_update` - タスク進捗更新
+        - `task_log_update` - タスクログ更新
+
+        **Authentication**: Bearer token required in Authorization header
+
+        **Example Subscription**:
+        ```json
+        {
+          "action": "subscribe",
+          "channels": ["task:task-123", "queue:queue-456"],
+          "filters": {
+            "statuses": ["running", "completed", "failed"]
+          }
+        }
+        ```
+
+        **Example Update Message**:
+        ```json
+        {
+          "type": "task_status_update",
+          "taskId": "task-123",
+          "timestamp": "2024-01-01T12:00:00Z",
+          "data": {
+            "status": "running",
+            "progress": 45,
+            "message": "Processing data...",
+            "startedAt": "2024-01-01T11:30:00Z"
+          }
+        }
+        ```
+      operationId: connectTaskStatusWebSocket
+      tags:
+        - websocket-controller
+      responses:
+        '101':
+          description: WebSocket connection established
+        '401':
+          description: Unauthorized - invalid token
+        '403':
+          description: Forbidden - insufficient permissions
   # Task Execution Provider Endpoints
   /api/v1/providers:
     get:
