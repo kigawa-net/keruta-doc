@@ -41,7 +41,7 @@ jobs:
           ./gradlew openApiGenerate --no-daemon --parallel
           # Move generated files to a non-gitignored location
           mkdir -p generated-api
-          cp -r build/generated/* generated-api/
+          rsync -avc --delete build/generated/ generated-api
           ls generated-api/
 
       - name: Check for changes in keruta-api
