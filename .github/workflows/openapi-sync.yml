@@ -115,7 +115,7 @@ jobs:
         timeout-minutes: 5
         run: |
           cd keruta-api
-          ./gradlew :api:bootRun --args='--spring.profiles.active=test' --no-daemon &
+          ./gradlew bootRun --args='--spring.profiles.active=test' --no-daemon &
           API_PID=$!
           echo "API_PID=$API_PID" >> $GITHUB_ENV
 
@@ -205,7 +205,7 @@ jobs:
         timeout-minutes: 5
         run: |
           cd keruta-api
-          ./gradlew :api:bootRun --args='--spring.profiles.active=test' --no-daemon &
+          ./gradlew bootRun --args='--spring.profiles.active=test' --no-daemon &
           API_PID=$!
           echo "API_PID=$API_PID" >> $GITHUB_ENV
 
