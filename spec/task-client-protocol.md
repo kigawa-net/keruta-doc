@@ -1,4 +1,4 @@
-# keruta task client protocol (KTP) 仕様
+# keruta task client protocol (KTCP) 仕様
 
 ## 概要
 
@@ -6,6 +6,6 @@ keruta task protocolはタスクのスケジューリングを制御するため
 
 ## 基底プロトコル
 
-KTP は到達保証のあるコネクション型プロトコルの上で動作します。
+KTCP は到達保証のあるコネクション型プロトコルの上で動作します。
 
 
