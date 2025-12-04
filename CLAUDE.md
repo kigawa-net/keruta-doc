@@ -23,12 +23,7 @@ The repository is organized into several key subprojects:
 
 ### OpenAPI Synchronization
 
-The repository has automated OpenAPI spec synchronization via GitHub Actions (`.github/workflows/openapi-sync.yml`):
-
-1. Pulls from `kigawa-net/keruta-api` repository
-2. Generates OpenAPI documentation using `./gradlew openApiGenerate`
-3. Generates TypeScript client for `kigawa-net/keruta-admin` using `npm run generate-client`
-4. Automatically commits and pushes changes to both repositories
+OpenAPI spec synchronization is handled manually or through external processes. The automated workflow (`.github/workflows/openapi-sync.yml`) has been removed to simplify CI/CD processes.
 
 ### Related Repositories
 
