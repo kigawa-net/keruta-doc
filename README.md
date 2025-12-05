@@ -1,5 +1,11 @@
 # keruta-doc
 
+* [外部仕様](spec/README.md)
+
+***
+
+Deprecated
+
 本リポジトリは、kerutaプロジェクトの設計・運用・技術情報をまとめたドキュメント集です。
 
 > **注意**: このディレクトリは https://github.com/kigawa-net/keruta-doc リポジトリに移行されます。

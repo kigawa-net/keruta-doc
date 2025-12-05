@@ -8,7 +8,8 @@ keruta はクラウドベースのバッチ処理システムであり、複数�
 ### 仕様の種類
 
 - **タスク関連**: タスクのスケジューリング、実行、管理
-- **ドキュメント関連**: ドキュメントの管理、共有、処理
+- **プロバイダー関連**: タスクの実行を行うモジュール
+- **ログ関連**: ログフォーマット、ストリーミング、保持ポリシー
 
 ## 仕様書一覧
 
@@ -24,13 +25,16 @@ keruta はクラウドベースのバッチ処理システムであり、複数�
 * [keruta task server protocol](./task-server-protocol.md)
     - タスクサーバープロトコルの仕様
 
-### ドキュメント関連 (未定義)
+### プロバイダー関連
 
-* [keruta document server](./document-server.md)
-    - ドキュメントサーバーの仕様
+* [keruta coder provider](./coder-provider.md)
+    - coder 環境管理プロバイダーの仕様
+    - KTCP を使用した環境起動管理
 
-* [keruta document protocol](./document-protocol.md)
-    - ドキュメントプロトコルの仕様
+### ログ関連
+
+* [keruta log](./log.md)
+    - ログフォーマット、ログレベル、ログストリーミングの仕様
 
 ## 開発ガイドライン
 
