@@ -34,7 +34,7 @@ keruta task server は、タスクの管理、実行、監視を行うサーバ�
 
 - Provider によるタスク実行
 - タイムアウトとリソース制限
-- タスクの状態はKTCPを使ってリアルタイムに更新
+- タスクの状態は [KTCP](./task-client-protocol.md) を使ってリアルタイムに更新
 
 ### 3. タスク監視
 
