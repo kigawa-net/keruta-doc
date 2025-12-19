@@ -24,12 +24,12 @@ KTCP サーバーの WebSocket 実装を提供するモジュール。タスク�
 ## エンドポイント
 
 ```
-ws://host:port/ws
-wss://host:port/ws（推奨）
+ws://host:port/ws/ktcp
+wss://host:port/ws/ktcp（推奨）
 ```
 
 ## 依存関係
 
 - `ktcp:server` - KTCP サーバーインターフェース
 - `ktcp:model` - プロトコルメッセージモデル
-- Ktor WebSocket
+- 外部: Ktor WebSocket - WebSocket 通信フレームワーク
