@@ -24,9 +24,11 @@ KTCP サーバーの WebSocket 実装を提供するモジュール。タスク�
 ## エンドポイント
 
 ```
-ws://host:port/ws/ktcp
-wss://host:port/ws/ktcp（推奨）
+ws://<host>:<port>/ws/ktcp
+wss://<host>:<port>/ws/ktcp（推奨）
 ```
+
+デフォルト: `ws://keruta-api:8080/ws/ktcp`
 
 ## 依存関係
 

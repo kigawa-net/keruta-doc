@@ -40,19 +40,19 @@ keruta はクラウドベースのバッチ処理システムであり、複数�
 
 モジュール間の依存関係は [モジュール構成図](./module/modules.png) を参照してください。
 
-* [kodel:core](./module/kodel:core.md)
+* [kodel:core](./module/kodel_core.md)
     - DI、エラーハンドリング、ログ管理を提供する汎用ライブラリのコアモジュール
 
-* [kodel:api](./module/kodel:api.md)
+* [kodel:api](./module/kodel_api.md)
     - API 層でのエラーハンドリング、ログ統合、DI 統合を提供
 
-* [ktcp:model](./module/ktcp:model.md)
+* [ktcp:model](./module/ktcp_model.md)
     - KTCP プロトコルのデータモデル定義
 
-* [ktcp:client](./module/ktcp:client.md)
+* [ktcp:client](./module/ktcp_client.md)
     - KTCP クライアント実装（プロバイダー側）
 
-* [ktcp:server](./module/ktcp:server.md)
+* [ktcp:server](./module/ktcp_server.md)
     - KTCP サーバー実装（タスクサーバー側）
 
 * [ktse](./module/ktse.md)
