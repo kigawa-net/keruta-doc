@@ -36,6 +36,28 @@ keruta はクラウドベースのバッチ処理システムであり、複数�
 * [keruta log](./log.md)
     - ログフォーマット、ログレベル、ログストリーミングの仕様
 
+### モジュール仕様
+
+モジュール間の依存関係は [モジュール構成図](./module/modules.png) を参照してください。
+
+* [kodel:core](./module/kodel_core.md)
+    - DI、エラーハンドリング、ログ管理を提供する汎用ライブラリのコアモジュール
+
+* [kodel:api](./module/kodel_api.md)
+    - API 層でのエラーハンドリング、ログ統合、DI 統合を提供
+
+* [ktcp:model](./module/ktcp_model.md)
+    - KTCP プロトコルのデータモデル定義
+
+* [ktcp:client](./module/ktcp_client.md)
+    - KTCP クライアント実装（プロバイダー側）
+
+* [ktcp:server](./module/ktcp_server.md)
+    - KTCP サーバー実装（タスクサーバー側）
+
+* [ktse](./module/ktse.md)
+    - Ktor WebSocket を使用した KTCP サーバーエンジン
+
 ## 開発ガイドライン
 
 - プロトコル仕様は明確で実装可能なものとする
