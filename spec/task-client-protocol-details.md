@@ -112,6 +112,22 @@ wss://keruta-api:8080/ws/ktcp (推奨)
 }
 ```
 
+##### 汎用的なエラー通知例
+```json
+{
+  "type": "generic_error",
+  "data": {
+    "status": "FAILED",
+    "errorCode": "GENERIC_ERROR",
+    "errorMessage": "システムで予期しないエラーが発生しました",
+    "exitCode": -1,
+    "retryable": false,
+    "failedAt": "2024-01-01T10:08:00Z"
+  },
+  "timestamp": "2024-01-01T10:08:00Z"
+}
+```
+
 #### 6. タスクキャンセル要求
 ```json
 {
