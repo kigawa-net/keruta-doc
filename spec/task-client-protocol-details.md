@@ -8,16 +8,16 @@ ws://keruta-api:8080/ws/ktcp
 wss://keruta-api:8080/ws/ktcp (推奨)
 ```
 
-#### 認証メッセージ
-```json
-{
-  "type": "authenticate",
-  "token": "<jwt-token>",
-  "clientType": "provider",
-  "clientVersion": "1.0.0",
-  "capabilities": ["kubernetes", "docker", "local"]
-}
+#### HTTPヘッダによる認証
+WebSocket接続時に以下のHTTPヘッダを設定してOIDCトークンによる認証を行います：
+
 ```
+Authorization: Bearer <oidc-token>
+```
+
+- **トークン形式**: Keycloak発行のOIDC IDトークン（JWT形式）
+- **必須ヘッダ**: AuthorizationヘッダをBearerスキームで設定
+- **認証失敗時**: 接続が拒否され、エラーが返されます
 
 #### ハートビート
 ```json
